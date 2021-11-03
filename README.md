@@ -1,9 +1,9 @@
 # pystr
 
-cpp string similar as python
+pystr is cpp string similar as python
 
-# something that different with python
-- use split with ()
-- you need to use py_str(char[]) or ps + char[] when you want to addition by no python strings
-- get length by pystr.len()
-- use pystr.c_str() to output data by %s
+# Something that different with python
+- Use index slicing with ()
+- You need to use py_str(char[]) or ps + char[] when you want to addition by no python strings
+- Get length by pystr.len()
+- Use pystr.c_str() to output data by %s
