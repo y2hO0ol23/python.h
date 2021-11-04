@@ -59,7 +59,4 @@ int main() {
 	cout << "p\"I hate\" += p\" \"+ \"Cpp\" : " << var4 << endl;
 	cout << "p\"Python\" == p\"Cpp\" : " << (p"Python" == p"Cpp") << endl;
 	cout << "p\"Python\" != p\"Cpp\" : " << (p"Python" != p"Cpp") << endl;
-	
-	char a[] = "asdf";
-	cout << p a;
 }
