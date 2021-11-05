@@ -59,4 +59,9 @@ int main() {
 	cout << "p\"I hate\" += p\" \"+ \"Cpp\" : " << var4 << endl;
 	cout << "p\"Python\" == p\"Cpp\" : " << (p"Python" == p"Cpp") << endl;
 	cout << "p\"Python\" != p\"Cpp\" : " << (p"Python" != p"Cpp") << endl;
+
+	cout << endl << p"=" * 20 + "input" + p"=" * 20 << endl;
+	pystr a,b,c,d;
+	cin >> a >> b >> c >> d;
+	cout << a + b + c + d;
 }
