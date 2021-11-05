@@ -5,8 +5,8 @@
 #include <vector>
 
 namespace py {
+#define p py_str("") %
 	class pystr;
-	class p;
 	pystr py_str(const pystr str);
 	pystr chr(const int n);
 	int ord(pystr n);
@@ -15,16 +15,20 @@ namespace py {
 	pystr str(int n);
 
 	class pystr {
+		friend std::ostream& operator<<(std::ostream& ret, const pystr& str);
+		friend std::istream& operator>>(std::istream& ret, pystr& str);
+		friend pystr operator+(const pystr& str1, const pystr& str2);
+		friend pystr operator%(const pystr& str1, const pystr& str2);
 	private:
 		int size = 0;
 		int volume = 1;
 		char* data = (char*)calloc(1, sizeof(char));
 
 		void extend_volume();
-		void set_volume(int value);
+		void set_volume(const int value);
 
 		void set_idx(int* idx);
-		void check_idx_out_of_range(int idx);
+		void check_idx_out_of_range(const int idx);
 	public:
 		pystr();		pystr(const char* str);		pystr(const char str);		pystr(const pystr& str);
 		char* c_str();
@@ -41,10 +45,6 @@ namespace py {
 		pystr replace(pystr str1, pystr str2);
 		std::vector<pystr> split(pystr target);		std::vector<pystr> split();
 
-		friend std::ostream& operator<<(std::ostream& ret, const pystr& str);
-		friend pystr operator+(const pystr& str1, const pystr& str2);
-		friend pystr operator%(const pystr& str1, const pystr& str2);
-
 		char operator[](int idx);
 		pystr operator()(int idx1, int idx2, const int jump);				pystr operator()(const char* idx1, int idx2, const int jump);		pystr operator()(int idx1, const char* idx2, const int jump);		pystr operator()(const char* idx1, const char* idx2, const int jump);
 		pystr operator()(int idx1, int idx2);						pystr operator()(const char* idx1, int idx2);				pystr operator()(int idx1, const char* idx2);				pystr operator()(const char* idx1, const char* idx2);
@@ -60,7 +60,7 @@ namespace py {
 	void pystr::extend_volume() {
 		set_volume(this->volume * 2);
 	}
-	void pystr::set_volume(int value) {
+	void pystr::set_volume(const int value) {
 		this->volume = value;
 		while (1) {
 			char* temp = (char*)realloc(this->data, this->volume);
@@ -74,7 +74,7 @@ namespace py {
 	void pystr::set_idx(int* idx) {
 		if (*idx < 0) *idx += this->size;
 	}
-	void pystr::check_idx_out_of_range(int idx) {
+	void pystr::check_idx_out_of_range(const int idx) {
 		if (idx < 0 || this->size <= idx) throw "string index out of range";
 	}
 
@@ -255,15 +255,25 @@ namespace py {
 		ret << str.data;
 		return ret;
 	}
+	std::istream& operator>>(std::istream& ret, pystr& str) {
+		char data;
+		pystr list = p" \n" + (char)0;
+		str = "";
+		while (-1 != list.find(ret.rdbuf()->sgetc())) ret.rdbuf()->snextc();
+		while (-1 == list.find(data = ret.rdbuf()->sgetc())) {
+			str += data;
+			ret.rdbuf()->snextc();
+		}
+		return ret;
+	}
 	pystr operator+(const pystr& str1, const pystr& str2) {
 		pystr ret = str1;
 		ret += str2;
 		return ret;
 	}
 	pystr operator%(const pystr& str1, const pystr& str2) {
-		return operator+(str1,str2);
+		return operator+(str1, str2);
 	}
-	#define p py_str("") %
 
 	char pystr::operator[](int idx) {
 		this->set_idx(&idx);
@@ -366,7 +376,7 @@ namespace py {
 		return std::strcmp(this->data, str.data);
 	}
 	pystr pystr::operator%(const pystr& str) {
-		return operator+(*this,str);
+		return operator+(*this, str);
 	}
 	//class end
 
