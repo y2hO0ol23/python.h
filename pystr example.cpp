@@ -9,11 +9,14 @@ int main() {
 	pystr python = "Python";
 	
 	printf("printf(\"%%s\",pystr.c_str()) : %s\n", python.c_str());
+	cout << "for (auto i : python) cout << i << endl" << endl;
+	for (auto i : python) cout << i << endl;
+
 	cout << "pystr.len() : " << python.len() << endl;
 
 	pystr var1 = "aaabbc";
 	cout << "pystr.count() : " << var1.count("a") << endl;
-
+	
 	cout << "pystr.find() : " << python.find("Py") << endl;
 	cout << "pystr.find() : " << python.find('x') << endl;
 
@@ -36,7 +39,7 @@ int main() {
 
 	cout << "pystr.replace(\"Pyth\",\"System \") : " << python.replace("Pyth", "System ") << endl;
 
-	pystr var3 = "life is too short. so we need Python";
+	pystr var3 = "life is too short. so we need Python. no Cpp.";
 	cout << "pystr.split(\" \") : " << var3.split(" ") << endl;
 
 	cout << "pystr[2] : " << python[2] << endl;
@@ -64,4 +67,5 @@ int main() {
 	pystr a,b,c,d;
 	cin >> a >> b >> c >> d;
 	cout << a + b + c + d;
+
 }
