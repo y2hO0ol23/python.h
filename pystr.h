@@ -58,7 +58,6 @@ namespace py {
 		bool operator<=(const pystr& str);
 		bool operator>(const pystr& str);
 		bool operator>=(const pystr& str);
-		pystr operator%(const pystr& str);
 	};
 	std::ostream& operator<<(std::ostream& ret, const pystr& str) {
 		ret << str.data;
@@ -403,9 +402,6 @@ namespace py {
 	}
 	bool pystr::operator>=(const pystr& str) {
 		return std::strcmp(this->data, str.data) >= 0;
-	}
-	pystr pystr::operator%(const pystr& str) {
-		return operator+(*this, str);
 	}
 
 	pystr py_str(const pystr& str) {
