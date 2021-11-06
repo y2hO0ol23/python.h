@@ -30,7 +30,9 @@ namespace py {
 	public:
 		pystr();		pystr(const char* str);		pystr(const char str);		pystr(const pystr& str);
 		~pystr();
-		const char* c_str();
+		char* begin();
+		char* end();
+		char* c_str();
 
 		int len();
 		int count(const pystr& str);
@@ -131,8 +133,14 @@ namespace py {
 		free(this->data);
 	}
 
-	const char* pystr::c_str() {
-		return (const char*)(this->data);
+	char* pystr::begin() { 
+		return &this->data[0]; 
+	}
+	char* pystr::end() { 
+		return &this->data[this->size - 1]; 
+	}
+	char* pystr::c_str() {
+		return this->data;
 	}
 	int pystr::len() {
 		return this->size;
@@ -402,5 +410,16 @@ namespace py {
 
 	pystr py_str(const pystr& str) {
 		return str;
+	}
+
+	std::ostream& operator<<(std::ostream& ret, const std::vector<pystr>& data) {
+		pystr res = '{';
+		int loop = data.size();
+		for (int i = 0; i < loop - 1; i++) {
+			res += "\"" + data[i] + "\", ";
+		}
+		res += "\"" + data[loop - 1] + "\"}";
+		ret << res;
+		return ret;
 	}
 }
