@@ -27,9 +27,12 @@ namespace py {
 
 		bool is_over(int _Idx);
 	public:
-
-		pystr();		pystr(const char* _Str);		pystr(const char _Str);		pystr(const pystr& _Str);
+		pystr();
+		pystr(const char* _Str);
+		pystr(const char _Str);
+		pystr(const pystr& _Str);
 		~pystr();
+
 		char* begin();
 		char* end();
 		char* c_str();
@@ -39,16 +42,24 @@ namespace py {
 		int find(const pystr& _Str);
 		int index(pystr _Str);
 		pystr join(pystr _Str);
-		pystr join(std::vector<pystr> _List);		pystr join(std::vector<char> _List);
+		pystr join(std::vector<pystr> _List);
+		pystr join(std::vector<char> _List);
 		pystr upper();
 		pystr lower();
-		pystr strip();					pystr lstrip(); 				pystr rstrip();
+		pystr strip();
+		pystr lstrip();
+		pystr rstrip();
 		pystr replace(const pystr& _Target, const pystr& _Val);
 		std::vector<pystr> split(pystr _Target = ' ');
 
 		char operator[](int _Idx);
-		pystr operator()(int _Begin, int _End, const int _Jmp = 1);				pystr operator()(const char* _Begin, int _End, const int _Jmp = 1);		pystr operator()(int _Begin, const char* _End, const int _Jmp = 1);		pystr operator()(const char* _Begin, const char* _End, const int _Jmp = 1);
-		pystr& operator=(const pystr& _Right);						pystr& operator=(const char* _Right);					pystr& operator=(const char _Right);
+		pystr operator()(int _Begin, int _End, const int _Jmp = 1);
+		pystr operator()(const char* _Begin, int _End, const int _Jmp = 1);
+		pystr operator()(int _Begin, const char* _End, const int _Jmp = 1);
+		pystr operator()(const char* _Begin, const char* _End, const int _Jmp = 1);
+		pystr& operator=(const pystr& _Right);
+		pystr& operator=(const char* _Right);
+		pystr& operator=(const char _Right);
 		pystr& operator+=(const pystr& _Right);
 		pystr operator*(const int _Val);
 		bool operator==(const pystr& _Right);
@@ -75,8 +86,7 @@ namespace py {
 	}
 	pystr operator+(const pystr& _Right, const pystr& _Left) {
 		pystr _rStr = _Right;
-		_rStr += _Left;
-		return _rStr;
+		return _rStr += _Left;
 	}
 	pystr operator%(const pystr& _Right, const pystr& _Left) {
 		return operator+(_Right, _Left);
@@ -89,8 +99,8 @@ namespace py {
 		while (1) {
 			char* _Temp = (char*)realloc(this->data, sizeof(char) * _Val);
 			if (_Temp != NULL) {
-				this->data = _Temp;
-				this->volume = _Val;
+				this->data		=	_Temp;
+				this->volume	=	_Val;
 				break;
 			}
 		}
@@ -250,17 +260,18 @@ namespace py {
 		return _rStr.lstrip().rstrip();
 	}
 	pystr pystr::lstrip() {
-		pystr _rStr = *this;
-		while (_rStr.size > 1 && _rStr[0] == ' ')
-			_rStr = _rStr(1, "");
-		if (_rStr.size == 1 && _rStr[0] == ' ') _rStr = "";
-		return _rStr;
+		pystr _Str = *this;
+		int _Idx = 0, _Ssize = _Str.size;
+		while (_Idx < _Ssize && _Str[_Idx] == ' ') _Idx++;
+		if (_Idx == _Ssize) return _Str = "";
+		return _Str(_Idx, "");
 	}
 	pystr pystr::rstrip() {
-		pystr _rStr = *this;
-		while (_rStr.size > 0 && _rStr[-1] == ' ')
-			_rStr = _rStr("", -1);
-		return _rStr;
+		pystr _Str = *this;
+		int _Idx = _Str.size;
+		while (_Idx > 0 && _Str[_Idx - 1] == ' ') _Idx--;
+		if (_Idx == 0) return _Str = "";
+		return _Str(0, _Idx);
 	}
 
 	pystr pystr::replace(const pystr& _Target, const pystr& _Val) {
