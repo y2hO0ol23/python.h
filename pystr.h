@@ -1,5 +1,4 @@
 #pragma once
-#include <cstdlib> 
 #include <cstring>
 #include <iostream>
 #include <vector>
@@ -11,121 +10,122 @@ namespace py {
 #define p py_str("") %
 
 	class pystr {
-		friend std::ostream& operator<<(std::ostream& ret, const pystr& str);
-		friend std::istream& operator>>(std::istream& ret, pystr& str);
-		friend pystr operator+(const pystr& str1, const pystr& str2);
-		friend pystr operator%(const pystr& str1, const pystr& str2);
+		friend std::ostream& operator<<(std::ostream& _os, const pystr& _Str);
+		friend std::istream& operator>>(std::istream& _is, pystr& _Str);
+		friend pystr operator+(const pystr& _Left, const pystr& _Right);
+		friend pystr operator%(const pystr& _Left, const pystr& _Right);
 	private:
 		int size = 0;
 		int volume = 1;
 		char* data = (char*)calloc(1, sizeof(char));
 
 		void extend_volume();
-		void set_volume(const int value);
+		void set_volume(const int _Val);
 
-		void set_idx(int* idx);
-		void check_idx_out_of_range(const int idx);
+		void set_idx(int* _Idx);
+		void check_idx_out_of_range(const int _Idx);
 
-		bool is_over(int idx);
+		bool is_over(int _Idx);
 	public:
-		pystr();		pystr(const char* str);		pystr(const char str);		pystr(const pystr& str);
+
+		pystr();		pystr(const char* _Str);		pystr(const char _Str);		pystr(const pystr& _Str);
 		~pystr();
 		char* begin();
 		char* end();
 		char* c_str();
 
 		int len();
-		int count(const pystr& str);
-		int find(const pystr& str);
-		int index(pystr str);
-		pystr join(pystr str);
-		pystr join(std::vector<pystr> list);		pystr join(std::vector<char> list);
+		int count(const pystr& _Str);
+		int find(const pystr& _Str);
+		int index(pystr _Str);
+		pystr join(pystr _Str);
+		pystr join(std::vector<pystr> _List);		pystr join(std::vector<char> _List);
 		pystr upper();
 		pystr lower();
 		pystr strip();					pystr lstrip(); 				pystr rstrip();
-		pystr replace(const pystr& target, const pystr& value);
-		std::vector<pystr> split(pystr target);		std::vector<pystr> split();
+		pystr replace(const pystr& _Target, const pystr& _Val);
+		std::vector<pystr> split(pystr _Target = ' ');
 
-		char operator[](int idx);
-		pystr operator()(int idx1, int idx2, const int jump = 1);				pystr operator()(const char* idx1, int idx2, const int jump = 1);		pystr operator()(int idx1, const char* idx2, const int jump = 1);		pystr operator()(const char* idx1, const char* idx2, const int jump = 1);
-		pystr& operator=(const pystr& str);						pystr& operator=(const char* str);					pystr& operator=(const char str);
-		pystr& operator+=(const pystr& str);
-		pystr operator*(const int value);
-		bool operator==(const pystr& str);
-		bool operator!=(const pystr& str);
-		bool operator<(const pystr& str);
-		bool operator<=(const pystr& str);
-		bool operator>(const pystr& str);
-		bool operator>=(const pystr& str);
+		char operator[](int _Idx);
+		pystr operator()(int _Begin, int _End, const int _Jmp = 1);				pystr operator()(const char* _Begin, int _End, const int _Jmp = 1);		pystr operator()(int _Begin, const char* _End, const int _Jmp = 1);		pystr operator()(const char* _Begin, const char* _End, const int _Jmp = 1);
+		pystr& operator=(const pystr& _Right);						pystr& operator=(const char* _Right);					pystr& operator=(const char _Right);
+		pystr& operator+=(const pystr& _Right);
+		pystr operator*(const int _Val);
+		bool operator==(const pystr& _Right);
+		bool operator!=(const pystr& _Right);
+		bool operator<(const pystr& _Right);
+		bool operator<=(const pystr& _Right);
+		bool operator>(const pystr& _Right);
+		bool operator>=(const pystr& _Right);
 	};
-	std::ostream& operator<<(std::ostream& ret, const pystr& str) {
-		ret << str.data;
-		return ret;
+	std::ostream& operator<<(std::ostream& _os, const pystr& _Str) {
+		_os << _Str.data;
+		return _os;
 	}
-	std::istream& operator>>(std::istream& ret, pystr& str) {
-		char data;
-		pystr list = p" \n" + (char)0;
-		str = "";
-		while (-1 != list.find(ret.rdbuf()->sgetc())) ret.rdbuf()->snextc();
-		while (-1 == list.find(data = ret.rdbuf()->sgetc())) {
-			str += data;
-			ret.rdbuf()->snextc();
+	std::istream& operator>>(std::istream& _is, pystr& _Str) {
+		char _Data;
+		pystr _List = p" \n" + (char)0;
+		_Str = "";
+		while (-1 != _List.find(_is.rdbuf()->sgetc())) _is.rdbuf()->snextc();
+		while (-1 == _List.find(_Data = _is.rdbuf()->sgetc())) {
+			_Str += _Data;
+			_is.rdbuf()->snextc();
 		}
-		return ret;
+		return _is;
 	}
-	pystr operator+(const pystr& str1, const pystr& str2) {
-		pystr ret = str1;
-		ret += str2;
-		return ret;
+	pystr operator+(const pystr& _Right, const pystr& _Left) {
+		pystr _rStr = _Right;
+		_rStr += _Left;
+		return _rStr;
 	}
-	pystr operator%(const pystr& str1, const pystr& str2) {
-		return operator+(str1, str2);
+	pystr operator%(const pystr& _Right, const pystr& _Left) {
+		return operator+(_Right, _Left);
 	}
 
 	void pystr::extend_volume() {
 		this->set_volume(this->volume * 2);
 	}
-	void pystr::set_volume(const int value) {
+	void pystr::set_volume(const int _Val) {
 		while (1) {
-			char* temp = (char*)realloc(this->data, sizeof(char) * value);
-			if (temp != NULL) {
-				this->data = temp;
-				this->volume = value;
+			char* _Temp = (char*)realloc(this->data, sizeof(char) * _Val);
+			if (_Temp != NULL) {
+				this->data = _Temp;
+				this->volume = _Val;
 				break;
 			}
 		}
 	}
 
-	void pystr::set_idx(int* idx) {
-		if (*idx < 0) *idx += this->size;
+	void pystr::set_idx(int* _Idx) {
+		if (*_Idx < 0) *_Idx += this->size;
 	}
-	void pystr::check_idx_out_of_range(const int idx) {
-		if (idx < 0 || this->size <= idx) throw "string index out of range";
+	void pystr::check_idx_out_of_range(const int _Idx) {
+		if (_Idx < 0 || this->size <= _Idx) throw "string index out of range";
 	}
 
-	bool pystr::is_over(int idx) {
-		return this->volume <= idx + 1;
+	bool pystr::is_over(int _Idx) {
+		return this->volume <= _Idx + 1;
 	}
 
 	pystr::pystr() {
 		this->operator=("");
 	}
-	pystr::pystr(const char* str) {
-		this->operator=(str);
+	pystr::pystr(const char* _Str) {
+		this->operator=(_Str);
 	}
-	pystr::pystr(const char str) {
-		this->operator=(str);
+	pystr::pystr(const char _Str) {
+		this->operator=(_Str);
 	}
-	pystr::pystr(const pystr& str) {
+	pystr::pystr(const pystr& _Str) {
 		//same as pystr::operator=(str)
-		int loop = str.size;
-		for (int i = 0; i < loop; i++) {
-			if (this->volume <= i) this->extend_volume();
-			this->data[i] = str.data[i];
+		int _Ssize = _Str.size;
+		for (int _Idx = 0; _Idx < _Ssize; _Idx++) {
+			if (this->volume <= _Idx) this->extend_volume();
+			this->data[_Idx] = _Str.data[_Idx];
 		}
-		if (this->volume <= loop) this->extend_volume();
-		this->data[loop] = '\0';
-		this->size = loop;
+		if (this->volume <= _Ssize) this->extend_volume();
+		this->data[_Ssize] = '\0';
+		this->size = _Ssize;
 	}
 	pystr::~pystr() {
 		free(this->data);
@@ -144,265 +144,266 @@ namespace py {
 		return this->size;
 	}
 
-	int pystr::count(const pystr& str) {
-		pystr temp = str;
+	int pystr::count(const pystr& _Str) {
+		pystr _Scopy = _Str;
 
-		int cnt = 0;
-		pystr cmp = *this;
-		int str_size = temp.size;
+		int _Cnt = 0;
+		pystr _Cmp = *this;
+		int _Ssize = _Scopy.size;
 		while (1) {
-			int res = cmp.find(temp);
-			if (res == -1) return cnt;
-			cnt++;
-			if (res + str_size >= cmp.size) return cnt;
-			cmp = cmp(res + str_size, "");
+			int _Res = _Cmp.find(_Scopy);
+			if (_Res == -1) return _Cnt;
+			_Cnt++;
+			if (_Res + _Ssize >= _Scopy.size) return _Cnt;
+			_Cmp = _Cmp(_Res + _Ssize, "");
 		}
 	}
-	int pystr::find(const pystr& str) {
-		pystr temp = str;
+	int pystr::find(const pystr& _Str) {
 		//kmp algorithm
-		int str_size = temp.size, j = 0;
-		std::vector<int> pi(str_size, 0); //get pi array
-		for (int i = 0; i < str_size; i++) {
-			while (j > 0 && temp[i] != temp[j]) j = pi[j - 1];
-			if (temp[i] == temp[j] && i != j) pi[i] = ++j;
+		int _Ssize = _Str.size, _piP2 = 0;
+		std::vector<int> _kmp_pi(_Ssize, 0); //get pi array
+		for (int _piP1 = 0; _piP1 < _Ssize; _piP1++) {
+			while (_piP2 > 0 && _Str.data[_piP1] != _Str.data[_piP2]) {
+				_piP2 = _kmp_pi[_piP2 - 1];
+			}
+			if (_Str.data[_piP1] == _Str.data[_piP2] && _piP1 != _piP2) {
+				_kmp_pi[_piP1] = ++_piP2;
+			}
 		}
 		//find string
-		pystr target_str = *this;
-		int target_str_size = target_str.size;
-		j = 0;
-		for (int i = 0; i < target_str_size; i++) {
-			while (j > 0 && target_str[i] != temp[j]) j = pi[j - 1];
-			if (target_str[i] == temp[j]) {
-				if (j == str_size - 1) return (i - str_size + 1);
-				j++;
+		pystr _Target = *this;
+		int _Tsize = _Target.size;
+		_piP2 = 0;
+		for (int _piP1 = 0; _piP1 < _Tsize; _piP1++) {
+			while (_piP2 > 0 && _Target[_piP1] != _Str.data[_piP2]) {
+				_piP2 = _kmp_pi[_piP2 - 1];
+			}
+			if (_Target[_piP1] == _Str.data[_piP2]) {
+				if (_piP2 == _Ssize - 1) return _piP1 - _Ssize + 1;
+				_piP2++;
 			}
 		}
 		return -1;
 	}
-	int pystr::index(pystr str) {
-		int res = find(str);
-		if (res == -1) throw "substring not found";
-		return res;
+	int pystr::index(pystr _Str) {
+		int _Res = find(_Str);
+		if (_Res == -1) throw "substring not found";
+		return _Res;
 	}
 
-	pystr pystr::join(pystr str) {
-		int loop = str.size;
-		pystr ret = str[0];
-		if (loop == 0) return ret;
-		for (int i = 1; i < loop; i++) {
-			ret += this->data;
-			ret += str[i];
+	pystr pystr::join(pystr _Str) {
+		int _Ssize = _Str.size;
+		pystr _rStr = _Str[0];
+		if (_Ssize == 0) return _rStr;
+		for (int _Idx = 1; _Idx < _Ssize; _Idx++) {
+			_rStr += this->data;
+			_rStr += _Str[_Idx];
 		}
-		return ret;
+		return _rStr;
 	}
-	pystr pystr::join(std::vector<pystr> list) {
-		int loop = list.size();
-		pystr ret;
-		if (loop == 0) return ret;
-		ret += list[0];
-		for (int i = 1; i < loop; i++) {
-			ret += this->data;
-			ret += list[i];
+	pystr pystr::join(std::vector<pystr> _List) {
+		int _Lsize = _List.size();
+		pystr _rStr;
+		if (_Lsize == 0) return _rStr;
+		_rStr += _List[0];
+		for (int _Idx = 1; _Idx < _Lsize; _Idx++) {
+			_rStr += this->data;
+			_rStr += _List[_Idx];
 		}
-		return ret;
+		return _rStr;
 	}
-	pystr pystr::join(std::vector<char> list) {
-		int loop = list.size();
-		pystr ret;
-		if (loop == 0) return ret;
-		ret = list[0];
-		for (int i = 1; i < loop; i++) {
-			ret += this->data;
-			ret += list[i];
+	pystr pystr::join(std::vector<char> _List) {
+		int _Lsize = _List.size();
+		pystr _rStr;
+		if (_Lsize == 0) return _rStr;
+		_rStr = _List[0];
+		for (int _Idx = 1; _Idx < _Lsize; _Idx++) {
+			_rStr += this->data;
+			_rStr += _List[_Idx];
 		}
-		return ret;
+		return _rStr;
 	}
 
 	pystr pystr::lower() {
-		pystr ret = *this;
-		int loop = ret.size;
-		for (int i = 0; i < loop; i++) {
-			if ('A' <= ret.data[i] && ret.data[i] <= 'Z') {
-				ret.data[i] += 'a' - 'A';
+		pystr _rStr = *this;
+		int loop = _rStr.size;
+		for (int _Idx = 0; _Idx < loop; _Idx++) {
+			if ('A' <= _rStr[_Idx] && _rStr[_Idx] <= 'Z') {
+				_rStr.data[_Idx] += 'a' - 'A';
 			}
 		}
-		return ret;
+		return _rStr;
 	}
 	pystr pystr::upper() {
-		pystr ret = *this;
-		int loop = ret.size;
-		for (int i = 0; i < loop; i++) {
-			if ('a' <= ret.data[i] && ret.data[i] <= 'z') {
-				ret.data[i] += 'A' - 'a';
+		pystr _rStr = *this;
+		int loop = _rStr.size;
+		for (int _Idx = 0; _Idx < loop; _Idx++) {
+			if ('a' <= _rStr[_Idx] && _rStr[_Idx] <= 'z') {
+				_rStr.data[_Idx] += 'A' - 'a';
 			}
 		}
-		return ret;
+		return _rStr;
 	}
 
 	pystr pystr::strip() {
-		pystr ret = *this;
-		return ret.lstrip().rstrip();
+		pystr _rStr = *this;
+		return _rStr.lstrip().rstrip();
 	}
 	pystr pystr::lstrip() {
-		pystr ret = *this;
-		while (ret.size > 1 && ret[0] == ' ')
-			ret = ret(1, "");
-		if (ret.size == 1 && ret[0] == ' ') ret = "";
-		return ret;
+		pystr _rStr = *this;
+		while (_rStr.size > 1 && _rStr[0] == ' ')
+			_rStr = _rStr(1, "");
+		if (_rStr.size == 1 && _rStr[0] == ' ') _rStr = "";
+		return _rStr;
 	}
 	pystr pystr::rstrip() {
-		pystr ret = *this;
-		while (ret.size > 0 && ret[-1] == ' ')
-			ret = ret("", -1);
-		return ret;
+		pystr _rStr = *this;
+		while (_rStr.size > 0 && _rStr[-1] == ' ')
+			_rStr = _rStr("", -1);
+		return _rStr;
 	}
 
-	pystr pystr::replace(const pystr& target, const pystr& value) {
-		pystr ret;
-		pystr str = *this;
-		int target_size = target.size;
+	pystr pystr::replace(const pystr& _Target, const pystr& _Val) {
+		pystr _rStr;
+		pystr _Str = *this;
+		int _Tsize = _Target.size;
 		while (1) {
-			int res = str.find(target);
-			if (res == -1) return ret + str;
+			int _Res = _Str.find(_Target);
+			if (_Res == -1) return _rStr + _Str;
 
-			ret += str("", res) + value;
-			str = str(res + target_size, "");
+			_rStr += _Str("", _Res) + _Val;
+			_Str = _Str(_Res + _Tsize, "");
 		}
 	}
 
-	std::vector<pystr> pystr::split(const pystr target) {
-		std::vector<pystr> ret;
-		pystr str = *this;
-		int target_size = target.size;
-		if (target_size == 0) throw "empty separator";
+	std::vector<pystr> pystr::split(const pystr _Target) {
+		std::vector<pystr> _rList;
+		pystr _Str = *this;
+		int _Tsize = _Target.size;
+		if (_Tsize == 0) throw "empty separator";
 		while (1) {
-			int res = str.find(target);
-			if (res == -1) {
-				ret.push_back(str);
-				return ret;
+			int _Res = _Str.find(_Target);
+			if (_Res == -1) {
+				_rList.push_back(_Str);
+				return _rList;
 			}
-			ret.push_back(str("", res));
-			str = str(res + target_size, "");
+			_rList.push_back(_Str("", _Res));
+			_Str = _Str(_Res + _Tsize, "");
 		}
 	}
-	std::vector<pystr> pystr::split() {
-		return this->split(' ');
-	}
 
-	char pystr::operator[](int idx) {
-		this->set_idx(&idx);
-		this->check_idx_out_of_range(idx);
-		char* ret = &(this->data[idx]);
-		return ret[0];
+	char pystr::operator[](int _Idx) {
+		this->set_idx(&_Idx);
+		this->check_idx_out_of_range(_Idx);
+		char* _rChar = &(this->data[_Idx]);
+		return _rChar[0];
 	};
-	pystr pystr::operator()(int idx1, int idx2, const int jump) {
-		pystr ret;
-		pystr temp = *this;
-		this->set_idx(&idx1);
-		this->set_idx(&idx2);
-		this->check_idx_out_of_range(idx1);
-		this->check_idx_out_of_range(idx2 - ((idx2 > 0) ? 1 : 0));
-		for (int i = idx1; i < idx2; i += jump) ret += temp[i];
-		return ret;
+	pystr pystr::operator()(int _Begin, int _End, const int _Jmp) {
+		pystr _rStr;
+		pystr _Str = *this;
+		this->set_idx(&_Begin);
+		this->set_idx(&_End);
+		this->check_idx_out_of_range(_Begin);
+		this->check_idx_out_of_range(_End - ((_End > 0) ? 1 : 0));
+		for (int _Idx = _Begin; _Idx < _End; _Idx += _Jmp) _rStr += _Str[_Idx];
+		return _rStr;
 	};
-	pystr pystr::operator()(const char* idx1, int idx2, const int jump) {
-		return this->operator()(0, idx2, jump);
+	pystr pystr::operator()(const char* _Begin, int _End, const int _Jmp) {
+		return this->operator()(0, _End, _Jmp);
 	}
-	pystr pystr::operator()(int idx1, const char* idx2, const int jump) {
-		return this->operator()(idx1, this->size, jump);
+	pystr pystr::operator()(int _Begin, const char* _End, const int _Jmp) {
+		return this->operator()(_Begin, this->size, _Jmp);
 	}
-	pystr pystr::operator()(const char* idx1, const char* idx2, const int jump) {
-		return this->operator()(0, this->size, jump);
+	pystr pystr::operator()(const char* _Begin, const char* _End, const int _Jmp) {
+		return this->operator()(0, this->size, _Jmp);
 	}
 
-	pystr& pystr::operator=(const pystr& str) {
-		int loop = str.size;
-		for (int i = 0; i < loop; i++) {
+	pystr& pystr::operator=(const pystr& _Right) {
+		int _Rsize = _Right.size;
+		for (int i = 0; i < _Rsize; i++) {
 			if (this->is_over(i)) this->extend_volume();
-			this->data[i] = str.data[i];
+			this->data[i] = _Right.data[i];
 		}
-		if (this->is_over(loop)) this->extend_volume();
-		this->data[loop] = '\0';
-		this->size = loop;
+		if (this->is_over(_Rsize)) this->extend_volume();
+		this->data[_Rsize] = '\0';
+		this->size = _Rsize;
 		return *this;
 	}
-	pystr& pystr::operator=(const char* str) {
-		int loop = strlen(str);
-		for (int i = 0; i < loop; i++) {
+	pystr& pystr::operator=(const char* _Right) {
+		int _Rsize = strlen(_Right);
+		for (int i = 0; i < _Rsize; i++) {
 			if (this->is_over(i)) this->extend_volume();
-			this->data[i] = str[i];
+			this->data[i] = _Right[i];
 		}
-		if (this->is_over(loop)) this->extend_volume();
-		this->data[loop] = '\0';
-		this->size = loop;
+		if (this->is_over(_Rsize)) this->extend_volume();
+		this->data[_Rsize] = '\0';
+		this->size = _Rsize;
 		return *this;
 	}
-	pystr& pystr::operator=(const char str) {
-		int point = this->size;
-		if (this->is_over(point)) this->extend_volume();
-		this->data[point] = str;
-		this->data[point + 1] = '\0';
-		this->size = point + 1;
+	pystr& pystr::operator=(const char _Right) {
+		if (this->is_over(0)) this->extend_volume();
+		this->data[0] = _Right;
+		this->data[1] = '\0';
+		this->size = 1;
 		return *this;
 	}
 
-	pystr& pystr::operator+=(const pystr& str) {
-		int loop = str.size;
-		int point = this->size;
-		for (int i = 0; i < loop; i++) {
-			if (this->is_over(point)) this->extend_volume();
-			this->data[point] = str.data[i];
-			point++;
+	pystr& pystr::operator+=(const pystr& _Right) {
+		int _Rsize = _Right.size;
+		int _Ssize = this->size;
+		int _Null_Idx = _Ssize + _Rsize;
+		for (int _Idx = _Ssize; _Idx < _Null_Idx; _Idx++) {
+			if (this->is_over(_Idx)) this->extend_volume();
+			this->data[_Idx] = _Right.data[_Idx - _Ssize];
 		}
-		if (this->is_over(point)) this->extend_volume();
-		this->data[point] = '\0';
-		this->size = point;
+		if (this->is_over(_Null_Idx)) this->extend_volume();
+		this->data[_Null_Idx] = '\0';
+		this->size = _Null_Idx;
 		return *this;
 	}
-	pystr pystr::operator*(int value) {
-		if (value <= 0) return py_str("");
-		pystr ret = *this;
-		int dcnt = 0;
-		while (value > 1) {
-			ret += ret;
-			if (value % 2) dcnt++;
-			value /= 2;
+	pystr pystr::operator*(int _Val) {
+		if (_Val <= 0) return py_str("");
+		pystr _rStr = *this;
+		int _Rest_Cnt = 0;
+		while (_Val > 1) {
+			_rStr += _rStr;
+			if (_Val % 2) _Rest_Cnt++;
+			_Val /= 2;
 		}
-		for (int i = 0; i < dcnt; i++) ret += *this;
-		return ret;
+		while(_Rest_Cnt--) _rStr += *this;
+		return _rStr;
 	}
-	bool pystr::operator==(const pystr& str) {
-		return !std::strcmp(this->data, str.data);
+	bool pystr::operator==(const pystr& _Right) {
+		return !std::strcmp(this->data, _Right.data);
 	}
-	bool pystr::operator!=(const pystr& str) {
-		return std::strcmp(this->data, str.data);
+	bool pystr::operator!=(const pystr& _Right) {
+		return std::strcmp(this->data, _Right.data);
 	}
-	bool pystr::operator<(const pystr& str) {
-		return std::strcmp(this->data, str.data) < 0;
+	bool pystr::operator<(const pystr& _Right) {
+		return std::strcmp(this->data, _Right.data) < 0;
 	}
-	bool pystr::operator<=(const pystr& str) {
-		return std::strcmp(this->data, str.data) <= 0;
+	bool pystr::operator<=(const pystr& _Right) {
+		return std::strcmp(this->data, _Right.data) <= 0;
 	}
-	bool pystr::operator>(const pystr& str) {
-		return std::strcmp(this->data, str.data) > 0;
+	bool pystr::operator>(const pystr& _Right) {
+		return std::strcmp(this->data, _Right.data) > 0;
 	}
-	bool pystr::operator>=(const pystr& str) {
-		return std::strcmp(this->data, str.data) >= 0;
+	bool pystr::operator>=(const pystr& _Right) {
+		return std::strcmp(this->data, _Right.data) >= 0;
 	}
 
-	pystr py_str(const pystr& str) {
-		return str;
+	pystr py_str(const pystr& _Str) {
+		return _Str;
 	}
 
-	std::ostream& operator<<(std::ostream& ret, const std::vector<pystr>& data) {
-		pystr res = '{';
-		int loop = data.size();
-		for (int i = 0; i < loop - 1; i++) {
-			res += "\"" + data[i] + "\", ";
+	std::ostream& operator<<(std::ostream& _os, const std::vector<pystr>& _List) {
+		pystr _rStr = '{';
+		int _Lsize = _List.size();
+		for (int _Idx = 0; _Idx < _Lsize - 1; _Idx++) {
+			_rStr += "\"" + _List[_Idx] + "\", ";
 		}
-		res += "\"" + data[loop - 1] + "\"}";
-		ret << res;
-		return ret;
+		_rStr += "\"" + _List[_Lsize - 1] + "\"}";
+		_os << _rStr;
+		return _os;
 	}
 }
