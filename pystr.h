@@ -47,8 +47,7 @@ namespace py {
 		std::vector<pystr> split(pystr target);		std::vector<pystr> split();
 
 		char operator[](int idx);
-		pystr operator()(int idx1, int idx2, const int jump);				pystr operator()(const char* idx1, int idx2, const int jump);		pystr operator()(int idx1, const char* idx2, const int jump);		pystr operator()(const char* idx1, const char* idx2, const int jump);
-		pystr operator()(int idx1, int idx2);						pystr operator()(const char* idx1, int idx2);				pystr operator()(int idx1, const char* idx2);				pystr operator()(const char* idx1, const char* idx2);
+		pystr operator()(int idx1, int idx2, const int jump = 1);				pystr operator()(const char* idx1, int idx2, const int jump = 1);		pystr operator()(int idx1, const char* idx2, const int jump = 1);		pystr operator()(const char* idx1, const char* idx2, const int jump = 1);
 		pystr& operator=(const pystr& str);						pystr& operator=(const char* str);					pystr& operator=(const char str);
 		pystr& operator+=(const pystr& str);
 		pystr operator*(const int value);
@@ -315,18 +314,6 @@ namespace py {
 	}
 	pystr pystr::operator()(const char* idx1, const char* idx2, const int jump) {
 		return this->operator()(0, this->size, jump);
-	}
-	pystr pystr::operator()(int idx1, int idx2) {
-		return this->operator()(idx1, idx2, 1);
-	}
-	pystr pystr::operator()(const char* idx1, int idx2) {
-		return this->operator()(0, idx2, 1);
-	}
-	pystr pystr::operator()(int idx1, const char* idx2) {
-		return this->operator()(idx1, this->size, 1);
-	}
-	pystr pystr::operator()(const char* idx1, const char* idx2) {
-		return this->operator()(0, this->size, 1);
 	}
 
 	pystr& pystr::operator=(const pystr& str) {
