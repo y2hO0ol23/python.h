@@ -1,71 +1,59 @@
 #include <iostream>
-#include <vector>
-#include "pystr.h"
+#include "python.h"
 
 using namespace std;
 using namespace py;
 
 int main() {
-	pystr python = "Python";
+	//can make pystr by using ""p
+	auto str = "  Life is too\tshort.  "p;
+	cout << "pystr = " << "'" + str + "'" << endl;
 	
-	printf("printf(\"%%s\",pystr.c_str()) : %s\n", python.c_str());
-	cout << "for (auto i : python) cout << i << endl" << endl;
-	for (auto i : python) cout << i << endl;
+	cout << endl << "output"p.center(40, "=") << endl; //function center
+	printf("printf(\"%%s\",pystr.c_str()) : %s\n", str.c_str());
+	cout << "for (auto i : pystr) cout << i << endl : ";
+	for (auto i : str) cout << i << ",";
+	cout << endl;
 
-	cout << "pystr.len() : " << python.len() << endl;
+	cout << endl << "\"function\"p.center(40,\"=\") : " << "function"p.center(40, "=") << endl;
+	cout << "pystr.count('o') : " << str.count('o') << endl;
+	cout << "pystr.endswith('o') : " << str.endswith('o') << endl;
+	cout << "pystr.expandtabs(3) : " << str.expandtabs(3) << endl;
+	cout << "pystr.find(\"short\") : " << str.find("short") << endl;
+	cout << "pystr.find(\"long\") : " << str.find("long") << endl;
+	cout << "pystr.index(\"short\") : " << str.index("short") << endl;
+	cout << "pystr.index(\"long\") : ";
+	try { cout << str.index("long") << endl; }
+	catch (pystr err) { cout << err << endl; }
+	cout << "pystr.isalnum() : " << str.isalnum() << endl;
+	cout << "pystr.isalpha() : " << str.isalpha() << endl;
+	cout << "pystr.isAscii() : " << str.isAscii() << endl;
+	cout << "pystr.isdecimal() : " << str.isdecimal() << endl;
+	cout << "\"//\"p.join(pystr) : " << "//"p.join(str) << endl;
+	pylist<pystr> list = { "Life", "is", "too", "short." };
+	cout << "pylist<pystr> = " << list << endl;
+	cout << "\" \"p.join(pylist<pystr>) : " << " "p.join(list) << endl;
+	cout << "\"pystr.lstrip()\" : " << '"' + str.lstrip() + '"'<< endl;
+	cout << "pystr.replace(\"short\",\"long\") : " << str.replace("short", "long") << endl;
+	cout << "pystr.rfind('o') : " << str.rfind('o') << endl;
+	cout << "\"pystr.rstrip()\" : " << '"' + str.rstrip() + '"' << endl;
+	cout << "pystr.split('s') : " << str.split('s') << endl;
+	cout << "\"pystr.strip()\" : " << '"' + str.strip() + '"' << endl;
+	cout << "len(pystr) : " << len(str) << endl;
+	cout << "ord(\"1\") : " << ord("1") << endl;
+	cout << "chr(49) : " << chr(49) << endl;
+	cout << "str(49) : " << py::str(49) << endl;
 
-	pystr var1 = "aaabbc";
-	cout << "pystr.count() : " << var1.count("a") << endl;
-	
-	cout << "pystr.find() : " << python.find("Py") << endl;
-	cout << "pystr.find() : " << python.find('x') << endl;
-
-	cout << "pystr.index() : " << python.index('n') << endl;
-	try { cout << python.index('x') << endl; }
-	catch (const char* res) { cout << "pystr.index() : " << res << endl; }
-
-	cout << "pystr.join(pystr) : " << py_str(",").join(python) << endl;
-	vector<pystr> list(5,python);
-	cout << "vector<pystr> : " << list << endl;
-	cout << "pystr.join(vector<pystr>) : "  << py_str("//").join(list) << endl;
-
-	cout << "pystr.upper() : " << python.upper() << endl;
-	cout << "pystr.lower() : " << python.lower() << endl;
-
-	pystr var2 = "   aaabbc   ";
-	cout << "pystr.lstrip() : \"" << var2.lstrip() << "\"" << endl;
-	cout << "pystr.rstrip() : \"" << var2.rstrip() << "\"" << endl;
-	cout << "pystr.strip() : \"" << var2.strip() << "\"" << endl;
-
-	cout << "pystr.replace(\"Pyth\",\"System \") : " << python.replace("Pyth", "System ") << endl;
-
-	pystr var3 = "life is too short. so we need Python. no Cpp.";
-	cout << "pystr.split(\" \") : " << var3.split(" ") << endl;
-
-	cout << "pystr[2] : " << python[2] << endl;
-	cout << "pystr(2, 4) : " << python(2, 5) << endl;
-	cout << "pystr(2, \"\") : " << python(2, "") << endl;
-	cout << "pystr(\"\", 4) : " << python("", 5) << endl;
-	cout << "pystr(\"\", \"\", 2) : " << python("", "", 2) << endl;
-
-	cout << endl << p"="*20 + "operators" + p"="*20<< endl;
-	
-	cout << "py_str(\"Py\") + \"thon\" : " << py_str("Py") + "thon" << endl;
-	cout << "\"Py\" + py_str(\"thon\") : " << "Py" + py_str("thon") << endl;
-	cout << "p\"Py\" + \"thon\" : " << p"Py" + "thon" << endl;
-	cout << "\"Py\" + p\"thon\" : " << "Py" + p"thon" << endl;
-	cout << "p\"Py\" + p\"thon\" * 2 : " << p"Py" + p"thon" * 2 << endl;
-	cout << "p\"Py\" % p\"thon\" * 2 : " << p"Py" % p"thon" * 2 << endl;
-
-	pystr var4 = "I hate";
-	var4 += p" " + "Cpp";
-	cout << "p\"I hate\" += p\" \"+ \"Cpp\" : " << var4 << endl;
-	cout << "p\"Python\" == p\"Cpp\" : " << (p"Python" == p"Cpp") << endl;
-	cout << "p\"Python\" != p\"Cpp\" : " << (p"Python" != p"Cpp") << endl;
-
-	cout << endl << p"=" * 20 + "input" + p"=" * 20 << endl;
-	pystr a,b,c,d;
-	cin >> a >> b >> c >> d;
-	cout << a + b + c + d;
-
+	cout << endl << "operator"p.center(40, "=") << endl;
+	pystr str1 = "a";
+	pystr str2 = "b";
+	cout << "str1, str2 = " << str1 << ", " << str2 << endl;
+	cout << "str1 + str2 : " << str1 + str2 << endl;
+	cout << "str1 += str2 : " << (str1 += str2) << endl;
+	cout << "str1 : " << str1 << endl;
+	cout << "str1 * 4 : " << (str1 * 4) << endl;
+	cout << "str1 == str2 : " << (str1 == str2) << endl;
+	cout << "str1 != str2 : " << (str1 != str2) << endl;
+	cout << "str1 < str2 : " << (str1 < str2) << endl;
+	cout << "str1 > str2 : " << (str1 > str2) << endl;
 }
