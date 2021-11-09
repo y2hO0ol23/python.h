@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <windows.h>
 #include "pylist.h"
+#include <map>
 
 namespace py {
 	class pystr;
@@ -64,6 +65,7 @@ namespace py {
 
 		//pystr capitalize();
 		//pystr casefold();
+		/**/
 		pystr center(const int _Length, const pystr& _Val = ' ');
 		int count(const pystr& _Str, int _Begin = 0);
 		int count(const pystr& _Str, int _Begin, int _End);
@@ -78,38 +80,46 @@ namespace py {
 		bool isalpha();
 		bool isAscii();
 		//bool isdigit();
+		/**/
 		bool isdecimal();
 		//bool islower();
 		//bool isnumeric();
 		//bool isprintable();
-		//bool isspace();
+		/**/
+		bool isspace();
 		//bool istitle();
 		//bool isupper();
+		/**/
 		pystr join(const pystr& _Str);
 		pystr join(pylist<pystr> _List);
 		pystr join(pylist<char> _List);
-		//pystr ljust(const int length, const pystr& _Val = ' ');
+		pystr ljust(const int length, const pystr& _Val = ' ');
 		//pystr lower();
+		/**/
 		pystr lstrip();
 		//pystr maketrance(const pystr& _Tstr, const pystr& _VStr, const pystr& _RStr = "");
-		//pylist<pystr> partition(const pystr& _Str);
+		/**/
+		pylist<pystr> partition(const pystr& _Str);
 		pystr replace(const pystr& _Tstr, const pystr& _Val);
 		pystr replace(const pystr& _Tstr, const pystr& _Val, int _Cnt);
 		int rfind(const pystr& _Str, int _Begin, int _End);
 		int rfind(const pystr& _Str, int _Begin = 0);
-		//int rindex(const pystr& _Str, int _Begin, int _End);
-		//pylist rjust(const int length, const pystr& _Val = ' ');
-		//pylist<pystr> rpartition(const pystr& _Str);
+		int rindex(const pystr& _Str, int _Begin = 0);
+		int rindex(const pystr& _Str, int _Begin, int _End);
+		pystr rjust(const int length, const pystr& _Val = ' ');
+		pylist<pystr> rpartition(const pystr& _Str);
 		pystr rstrip();
 		pylist<pystr> split(const pystr& _Tstr = ' ');
-		//pylist<pystr> splitlines(const bool _keepLineBreak = False);
-		//bool startwith(const pystr& _Str, int _Begin, int _End);
+		pylist<pystr> splitlines(const bool _keepLineBreak = false);
+		bool startwith(const pystr& _Str, int _Begin = 0);
+		bool startwith(const pystr& _Str, int _Begin, int _End);
 		pystr strip();
 		//pystr swapcase();
 		//pystr title();
 		//pystr translate(std::map<pystr,pystr> _Dict);
 		//pystr upper();
-		//pystr zfill(const int _Cnt);
+		/**/
+		pystr zfill(const int _Cnt);
 
 		pystr operator[](int _Idx);
 		pystr operator()(int _Begin, int _End, const int _Jmp = 1);
@@ -309,8 +319,9 @@ namespace py {
 	}
 
 
-	//pystr capitalize();
-	//pystr casefold();
+	//pystr pystr::capitalize();
+	//pystr pystr::casefold();
+	/**/
 	pystr pystr::center(const int _Length, const pystr& _Val) {
 		if (_Val.size != 1) throw "TypeError: The fill character must be exactly one character long"p;
 		int _Ssize = this->size;
@@ -341,7 +352,7 @@ namespace py {
 		return this->endswith(_Str, _Begin, this->size);
 	}
 	bool pystr::endswith(const pystr& _Str, int _Begin, int _End) {
-		return (*this)(_Begin, _End)(-_Str.size, "") == _Str;
+		return (*this)[_End - 1] == _Str;
 	}
 	pystr pystr::expandtabs(int _Val) {
 		if (_Val > 1) _Val -= 1;
@@ -384,7 +395,7 @@ namespace py {
 		return this->index(_Str, _Begin, this->size);
 	}
 	int pystr::index(const pystr& _Str, int _Begin, int _End) {
-		int _Res = find(_Str, _Begin, _End);
+		int _Res = this->find(_Str, _Begin, _End);
 		if (_Res == -1) throw "ValueError: substring not found"p;
 		return _Res;
 	}
@@ -418,7 +429,8 @@ namespace py {
 		}
 		return true;
 	}
-	//bool isdigit();
+	//bool pystr::isdigit();
+	/**/
 	bool pystr::isdecimal() {
 		if (this->size == 0) return false;
 		int _Ssize = this->size;
@@ -428,12 +440,21 @@ namespace py {
 		}
 		return true;
 	}
-	//bool islower();
-	//bool isnumeric();
-	//bool isprintable();
-	//bool isspace();
-	//bool istitle();
-	//bool isupper();
+	//bool pystr::islower();
+	//bool pystr::isnumeric();
+	//bool pystr::isprintable();
+	/**/
+	bool pystr::isspace() {
+		if (this->size == 0) return false;
+		int _Ssize = this->size;
+		for (int _Idx = 0; _Idx < _Ssize; _Idx++) {
+			if (this->data[0] != ' ') return false;
+		}
+		return true;
+	}
+	//bool pystr::istitle();
+	//bool pystr::isupper();
+	/**/
 	pystr pystr::join(const pystr& _Str) {
 		int _Ssize = _Str.size;
 		pystr _Scopy = _Str;
@@ -467,8 +488,12 @@ namespace py {
 		}
 		return _rStr;
 	}
-	//pystr ljust(const int length, const pystr& _Val = ' ');
-	//pystr lower();
+	pystr pystr::ljust(const int length, const pystr& _Val) {
+		if (_Val.size != 1) throw "TypeError: The fill character must be exactly one character long"p;
+		return this->data + _Val * (length - this->size);
+	}
+	//pystr pystr::lower();
+	/**/
 	pystr pystr::lstrip() {
 		pystr _Cmp = " \t"p;
 		int _Idx = 0, _Ssize = this->size;
@@ -476,8 +501,13 @@ namespace py {
 		if (_Idx == _Ssize) return "";
 		return this->operator()(_Idx, "");
 	}
-	//pystr maketrance(const pystr& _Tstr, const pystr& _VStr, const pystr& _RStr = "");
-	//pylist<pystr> partition(const pystr& _Str);
+	//std::map<int, int> pystr::maketrance(const pystr& _Tstr, const pystr& _VStr, const pystr& _RStr);
+	/**/
+	pylist<pystr> pystr::partition(const pystr& _Str) {
+		int _Idx = this->find(_Str);
+		if (_Idx == -1) _Idx = this->size;
+		return { (*this)("",_Idx), _Str, (*this)(_Idx + _Str.size,"") };
+	}
 	pystr pystr::replace(const pystr& _Tstr, const pystr& _Val) {
 		return this->replace(_Tstr, _Val, this->size);
 	}
@@ -529,9 +559,23 @@ namespace py {
 		}
 		return -1;
 	}
-	//int rindex(const pystr& _Str, int _Begin, int _End);
-	//pylist rjust(const int length, const pystr& _Val = ' ');
-	//pylist<pystr> rpartition(const pystr& _Str);
+	int pystr::rindex(const pystr& _Str, int _Begin) {
+		return this->rindex(_Str, _Begin, this->size);
+	}
+	int pystr::rindex(const pystr& _Str, int _Begin, int _End) {
+		int _Res = this->rfind(_Str, _Begin, _End);
+		if (_Res == -1) throw "ValueError: substring not found"p;
+		return _Res;
+	}
+	pystr pystr::rjust(const int length, const pystr& _Val) {
+		if (_Val.size != 1) throw "TypeError: The fill character must be exactly one character long"p;
+		return _Val * (length - this->size) + this->data;
+	}
+	pylist<pystr> pystr::rpartition(const pystr& _Str) {
+		int _Idx = this->rfind(_Str);
+		if (_Idx == -1) _Idx = this->size;
+		return { (*this)("",_Idx), _Str, (*this)(_Idx + _Str.size,"") };
+	}
 	pystr pystr::rstrip() {
 		pystr _Str = *this, _Cmp = " \t"p;
 		int _Idx = _Str.size;
@@ -554,17 +598,31 @@ namespace py {
 			_Str = _Str(_Res + _Tsize, "");
 		}
 	}
-	//pylist<pystr> splitlines(const bool _keepLineBreak = False);
-	//bool startwith(const pystr& _Str, int _Begin, int _End);
+	pylist<pystr> pystr::splitlines(const bool _keepLineBreak) {
+		pystr _Str = *this;
+		if (_keepLineBreak == true) _Str = _Str.replace('\n', "@\n\n");
+		else						_Str = _Str.replace('\n', "@\n");
+		return _Str.split("@\n");
+	}
+	bool pystr::startwith(const pystr& _Str, int _Begin) {
+		return this->startwith(_Str, _Begin, this->size);
+	}
+	bool pystr::startwith(const pystr& _Str, int _Begin, int _End) {
+		return (*this)[_Begin] == _Str;
+	}
 	pystr pystr::strip() {
 		pystr _rStr = *this;
 		return _rStr.lstrip().rstrip();
 	}
-	//pystr swapcase();
-	//pystr title();
-	//pystr translate(std::map<pystr,pystr> _Dict);
-	//pystr upper();
-	//pystr zfill(const int _Cnt);
+	//pystr pystr::swapcase();
+	//pystr pystr::title();
+	//pystr pystr::translate(std::map<pystr,pystr> _Dict);
+	//pystr pystr::translate(std::map<pystr,pystr> _Dict);
+	//pystr pystr::upper();
+	/**/
+	pystr pystr::zfill(const int _Cnt) {
+		return this->rjust(_Cnt, "0");
+	}
 
 	pystr pystr::operator[](int _Idx) {
 		this->set_idx(&_Idx);
