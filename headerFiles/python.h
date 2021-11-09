@@ -1,4 +1,6 @@
 #pragma once
+#ifndef _PYTHOMMAIM_
+#define _PYTHOMMAIM_
 #include "pystr.h"
 #include "pylist.h"
 
@@ -53,3 +55,4 @@ namespace py {
 		return range(0, _End);
 	}
 }
+#endif
