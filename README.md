@@ -21,7 +21,7 @@ Project that move python to c++.
 
 <h2> Degree of progress </h2>
 <ul>
-  <li>pystr // some functions left.</li>
+  <li>pystr // need pyDict.</li>
   <li>pylist // all done.</li>
   <li>pydict // didn't start yet.</li>
 <ul>
