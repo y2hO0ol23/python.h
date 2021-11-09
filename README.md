@@ -1,7 +1,5 @@
 # python
-
-python to c++.\n
-pystr, pylist is uploaded.
+Project that move python to c++.
 
 # Something that different with python
 - Use index slicing with ()
