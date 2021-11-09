@@ -54,18 +54,63 @@ int main() {
 
 	str = "python1\npython2\npython3\npython1972";
 	cout << endl << "pystr = " << str.replace("\n","\\n") << endl;
-	cout << "pystr.splitlines() : " << str.splitlines() << endl;
+	cout << "pystr.splitlines() : " <<	str.splitlines() << endl;
 
 	cout << endl << "operator"p.center(40, "=") << endl;
 	pystr str1 = "a";
 	pystr str2 = "b";
-	cout << "str1 = " << str1 << endl << "str2 = " << str2 << endl;
-	cout << "str1 + str2 : "p.ljust(15) << str1 + str2 << endl;
+	cout << "str1 = " << str1 << endl 
+		 << "str2 = " << str2 << endl;
+	cout << "str1 + str2 : "p.ljust(15) <<	 str1 + str2 << endl;
 	cout << "str1 += str2 : "p.ljust(15) << (str1 += str2) << endl;
-	cout << "str1 : "p.ljust(15) << str1 << endl;
-	cout << "str1 * 4 : "p.ljust(15) << (str1 * 4) << endl;
+	cout << "str1 : "p.ljust(15) <<			 str1 << endl;
+	cout << "str1 * 4 : "p.ljust(15) <<		(str1 * 4) << endl;
 	cout << "str1 == str2 : "p.ljust(15) << (str1 == str2) << endl;
 	cout << "str1 != str2 : "p.ljust(15) << (str1 != str2) << endl;
-	cout << "str1 < str2 : "p.ljust(15) << (str1 < str2) << endl;
-	cout << "str1 > str2 : "p.ljust(15) << (str1 > str2) << endl;
+	cout << "str1 < str2 : "p.ljust(15) <<	(str1 < str2) << endl;
+	cout << "str1 > str2 : "p.ljust(15) <<	(str1 > str2) << endl;
+
+	cout << endl 
+		<< "="p*40 << endl
+		<< "pylist"p.center(40, "=") << endl
+		<< "="p * 40 << endl << endl;
+	pylist<int> list1 = { 4,5,6 };
+	pylist<int> list2 = { 7,8,9 };
+	pylist<int> list3 = { 1,2,3 };
+	cout << "list1 = " << list1 << endl
+		 << "list2 = " << list2 << endl
+		 << "list3 = " << list3 << endl;
+	cout << "list1 += list2 + list3 : " <<					(list1 += list2 + list3) << endl;
+	cout << "list1 : " << list1 << endl;
+	cout << "for (auto ele : list1) cout << ele : "p.ljust(32);
+															for (auto ele : list1) cout << ele;
+	cout << endl;
+	cout << "pylist : "p.ljust(32) <<						list1 << " // (list1)" << endl;
+	cout << "pylist.len() : "p.ljust(32) <<					list1.len() << endl;
+	cout << "pylist.append(7) : "p.ljust(32) <<				list1.append(7) << endl;
+	cout << "pylist.pop(3) : "p.ljust(32) <<				list1.pop(3) << endl;
+	cout << "pylist : "p.ljust(32) <<						list1 << endl;
+	cout << "pylist.del(2,5) : "p.ljust(32) <<				list1.del(2, 5) << endl;
+	cout << "pylist.sort() : "p.ljust(32) <<				list1.sort() << endl;
+	cout << "pylist.reverse() : "p.ljust(32) <<				list1.reverse() << endl;
+	cout << "pylist.index(5) : "p.ljust(32) <<				list1.index(5) << endl;
+	cout << "pylist.index(10) : "p.ljust(32);
+	try { cout <<											list1.index(10) << endl;
+	}														catch (pystr err) { cout << err << endl; }
+	cout << "cout << pylist.insert(5,7) : "p.ljust(32) <<	list1.insert(5, 7) << endl;
+	cout << "cout << pylist.remove(5) : "p.ljust(32) <<		list1.remove(5) << endl;
+	cout << "cout << pylist.remove(10) : "p.ljust(32);
+	try {
+		cout << list1.remove(10) << endl;
+	}
+	catch (pystr err) { cout << err << endl; }
+	cout << "cout << pylist.count(7) :  "p.ljust(32) <<		 list1.count(7) << endl;
+	cout << "cout << pylist.extend(pylist) : "p.ljust(32) << list1.extend(list1) << endl;
+	cout << "cout << pylist.clear() : "p.ljust(32) <<		 list1.clear() << endl;
+	cout << "operators"p.center(40, "=") << endl;
+	list1 = { 1,3,2,4,5,6,9,7,8 };
+	cout << "cout << pylist(\"\", \"\") : "p.ljust(32) <<	 list1("", "") << endl;
+	cout << "cout << pylist(1, 5) : "p.ljust(32) <<			 list1(1, 5) << endl;
+	cout << "cout << *pylist[3] : "p.ljust(32) <<			*list1[3] << endl;
+	cout << "cout << pylist * 3 : "p.ljust(32) <<			 list1 * 2 << endl;
 }
