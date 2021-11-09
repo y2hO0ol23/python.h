@@ -1,4 +1,4 @@
-<h1> python </h1>
+<h1> Python </h1>
 Project that move python to c++.
 
 <h1> Something that different with python </h1>
