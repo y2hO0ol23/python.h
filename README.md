@@ -1,6 +1,6 @@
 # pystr
 
-pystr is cpp string similar as python
+pystr is c++ string similar as python
 
 # Something that different with python
 - Use index slicing with ()
