@@ -362,34 +362,10 @@ namespace py {
 		return this->find(_Str, _Begin, this->size);
 	}
 	int pystr::find(const pystr& _Str, int _Begin, int _End) {
-		this->set_large_idx(&_Begin); this->set_large_idx(&_End);
-		//kmp algorithm
-		pystr _Scopy = _Str;
-		int _Ssize = _Scopy.size, _piP2 = 0;
-		pylist<int> _kmp_pi(_Ssize, 0); //get pi array
-		for (int _piP1 = 0; _piP1 < _Ssize; _piP1++) {
-			while (_piP2 > 0 && _Scopy[_piP1] != _Scopy[_piP2]) {
-				_piP2 = *_kmp_pi[_piP2 - 1];
-			}
-			if (_Scopy[_piP1] == _Scopy[_piP2] && _piP1 != _piP2) {
-				*_kmp_pi[_piP1] = ++_piP2;
-			}
-		}
-
-		//find string
-		pystr _Target = this->operator()(_Begin, _End);
-		int _Tsize = _Target.size;
-		_piP2 = 0;
-		for (int _piP1 = 0; _piP1 < _Tsize; _piP1++) {
-			while (_piP2 > 0 && _Target[_piP1] != _Scopy[_piP2]) {
-				_piP2 = *_kmp_pi[_piP2 - 1];
-			}
-			if (_Target[_piP1] == _Scopy[_piP2]) {
-				if (_piP2 == _Ssize - 1) return _piP1 - _Ssize + 1 + _Begin;
-				_piP2++;
-			}
-		}
-		return -1;
+		pystr _Tstr = (*(this))(_Begin, _End);
+		wchar_t* _Ptr = wcsstr(_Tstr.data, _Str.data);
+		if (_Ptr == nullptr) return -1;
+		return (_Ptr - _Tstr.data) + _Begin;
 	}
 	int pystr::index(const pystr& _Str, int _Begin) {
 		return this->index(_Str, _Begin, this->size);
