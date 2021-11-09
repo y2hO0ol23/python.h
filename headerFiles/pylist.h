@@ -1,4 +1,6 @@
 #pragma once
+#ifndef _PYTHONLIST_
+#define _PYTHONLIST_
 #include <iostream>
 #include <algorithm>
 #include "pystr.h"
@@ -12,8 +14,8 @@ namespace py {
 		friend class pylist<T>;
 	private:
 		T data;
-		node<T>* next; // ´ÙÀ½
-		node<T>* prev; // ÀÌÀü
+		node<T>* next; // ë‹¤ìŒ
+		node<T>* prev; // ì´ì „
 	};
 
 	template <class T>
@@ -21,8 +23,8 @@ namespace py {
 		template <class opT> friend std::ostream& operator<<(std::ostream& _os, const pylist<opT>& _List);
 		template <class opT> friend pylist<opT> operator+(const pylist<opT>& _Left, const pylist<opT>& _Right);
 	private:
-		node<T>* head = nullptr; // ½ÃÀÛ
-		node<T>* tail = nullptr; // ³¡
+		node<T>* head = nullptr; // ì‹œì‘
+		node<T>* tail = nullptr; // ë
 		int size = 0;
 
 		void set_idx(int* _Idx);
@@ -407,3 +409,4 @@ namespace py {
 		return this->operator()(0, this->size, _Jmp);
 	}
 }
+#endif
