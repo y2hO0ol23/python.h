@@ -28,21 +28,33 @@ int main() {
 	cout << "pystr.isalnum() : " << str.isalnum() << endl;
 	cout << "pystr.isalpha() : " << str.isalpha() << endl;
 	cout << "pystr.isAscii() : " << str.isAscii() << endl;
+	cout << "pystr.isspace() : " << str.isspace() << endl;
 	cout << "pystr.isdecimal() : " << str.isdecimal() << endl;
 	cout << "\"//\"p.join(pystr) : " << "//"p.join(str) << endl;
 	pylist<pystr> list = { "Life", "is", "too", "short." };
 	cout << "pylist<pystr> = " << list << endl;
 	cout << "\" \"p.join(pylist<pystr>) : " << " "p.join(list) << endl;
+	cout << "pystr.ljust(30,\"_\") : " << str.ljust(30,"_") << endl;
 	cout << "\"pystr.lstrip()\" : " << '"' + str.lstrip() + '"'<< endl;
+	cout << "pystr.partition(\"o\") : " << str.partition("o") << endl;
 	cout << "pystr.replace(\"short\",\"long\") : " << str.replace("short", "long") << endl;
 	cout << "pystr.rfind('o') : " << str.rfind('o') << endl;
+	cout << "pystr.rindex('o') : " << str.rindex('o') << endl;
+	cout << "pystr.rjust(30,\"_\") : " << str.rjust(30, "_") << endl;
+	cout << "pystr.rpartition(\"o\") : " << str.rpartition("o") << endl;
 	cout << "\"pystr.rstrip()\" : " << '"' + str.rstrip() + '"' << endl;
 	cout << "pystr.split('s') : " << str.split('s') << endl;
 	cout << "\"pystr.strip()\" : " << '"' + str.strip() + '"' << endl;
+	cout << "pystr.zfill(30) : " << str.zfill(30) << endl;
+
 	cout << "len(pystr) : " << len(str) << endl;
 	cout << "ord(\"1\") : " << ord("1") << endl;
 	cout << "chr(49) : " << chr(49) << endl;
 	cout << "str(49) : " << py::str(49) << endl;
+
+	str = "python1\npython2\npython3\npython1972";
+	cout << endl << "pystr = " << str.replace("\n","\\n") << endl;
+	cout << "pystr.splitlines()" << str.splitlines() << endl;
 
 	cout << endl << "operator"p.center(40, "=") << endl;
 	pystr str1 = "a";
