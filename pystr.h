@@ -6,8 +6,11 @@
 
 namespace py {
 	class pystr;
-	int len(pystr _Str);
-
+	int len(const pystr& _Str);
+	int ord(const pystr& _Str);
+	pystr chr(const int& _Val);
+	pystr str(const double& _Val);
+	
 	class pystr {
 		friend pystr operator""p(const char* _Str, size_t len);
 		friend std::ostream& operator<<(std::ostream& _os, const pystr& _Str);
@@ -20,14 +23,17 @@ namespace py {
 		friend bool operator>(const pystr& _Left, const pystr& _Right);
 		friend bool operator>=(const pystr& _Left, const pystr& _Right);
 		friend pystr operator*(const pystr& _Str, int _Val);
-		friend int len(pystr _Str);
+		friend int len(const pystr& _Str);
+		friend int ord(const pystr& _Str);
 	private:
 		int size = 0;
 		int volume = 0;
 		wchar_t* data;
+		pystr* is_range_base = nullptr;
 
 		struct range_base {
 			range_base() {}
+			~range_base() { free(this->data); }
 			pystr* data = nullptr;
 			int volume = 0;
 			bool flag = true;
@@ -56,35 +62,54 @@ namespace py {
 		pystr* end();
 		char* c_str();
 
+		//pystr capitalize();
+		//pystr casefold();
+		pystr center(const int _Length, const pystr& _Val = ' ');
 		int count(const pystr& _Str, int _Begin = 0);
 		int count(const pystr& _Str, int _Begin, int _End);
-		int find(const pystr& _Str, int _Begin, int _End);
-		int find(const pystr& _Str, int _Begin = 0);
-		int rfind(const pystr& _Str, int _Begin, int _End);
-		int rfind(const pystr& _Str, int _Begin = 0);
-		int index(const pystr& _Str);
-		pystr join(const pystr& _Str);
-		pystr join(py::pylist<pystr> _List);
-		pystr join(py::pylist<char> _List);
-		pystr upper();
-		pystr lower(); pystr casefold();
-		pystr swapcase();
-		pystr capitalize();
-		pystr title();
-		pystr strip();
-		pystr lstrip();
-		pystr rstrip();
-		pystr replace(const pystr& _Tstr, const pystr& _Val);
-		pystr replace(const pystr& _Tstr, const pystr& _Val, int _Cnt);
-		py::pylist<pystr> split(const pystr& _Tstr = ' ');
-		pystr center(const int _Length, const pystr& _Val = ' ');
 		bool endswith(const pystr& _Str, int _Begin = 0);
 		bool endswith(const pystr& _Str, int _Begin, int _End);
 		pystr expandtabs(int _Val = 8);
+		int find(const pystr& _Str, int _Begin, int _End);
+		int find(const pystr& _Str, int _Begin = 0);
+		int index(const pystr& _Str, int _Begin, int _End);
+		int index(const pystr& _Str, int _Begin = 0);
 		bool isalnum();
-		bool isalpa();
+		bool isalpha();
 		bool isAscii();
+		//bool isdigit();
 		bool isdecimal();
+		//bool islower();
+		//bool isnumeric();
+		//bool isprintable();
+		//bool isspace();
+		//bool istitle();
+		//bool isupper();
+		pystr join(const pystr& _Str);
+		pystr join(pylist<pystr> _List);
+		pystr join(pylist<char> _List);
+		//pystr ljust(const int length, const pystr& _Val = ' ');
+		//pystr lower();
+		pystr lstrip();
+		//pystr maketrance(const pystr& _Tstr, const pystr& _VStr, const pystr& _RStr = "");
+		//pylist<pystr> partition(const pystr& _Str);
+		pystr replace(const pystr& _Tstr, const pystr& _Val);
+		pystr replace(const pystr& _Tstr, const pystr& _Val, int _Cnt);
+		int rfind(const pystr& _Str, int _Begin, int _End);
+		int rfind(const pystr& _Str, int _Begin = 0);
+		//int rindex(const pystr& _Str, int _Begin, int _End);
+		//pylist rjust(const int length, const pystr& _Val = ' ');
+		//pylist<pystr> rpartition(const pystr& _Str);
+		pystr rstrip();
+		pylist<pystr> split(const pystr& _Tstr = ' ');
+		//pylist<pystr> splitlines(const bool _keepLineBreak = False);
+		//bool startwith(const pystr& _Str, int _Begin, int _End);
+		pystr strip();
+		//pystr swapcase();
+		//pystr title();
+		//pystr translate(std::map<pystr,pystr> _Dict);
+		//pystr upper();
+		//pystr zfill(const int _Cnt);
 
 		pystr operator[](int _Idx);
 		pystr operator()(int _Begin, int _End, const int _Jmp = 1);
@@ -147,28 +172,22 @@ namespace py {
 		return _rStr += _Right;
 	}
 	bool operator==(const pystr& _Left, const pystr& _Right) {
-		pystr _Factors[2] = { _Left,_Right };
-		return !std::strcmp(_Factors[0].data_to_char(), _Factors[1].data_to_char());
+		return !std::wcscmp(_Left.data, _Right.data);
 	}
 	bool operator!=(const pystr& _Left, const pystr& _Right) {
-		pystr _Factors[2] = { _Left,_Right };
-		return std::strcmp(_Factors[0].data_to_char(), _Factors[1].data_to_char());
+		return std::wcscmp(_Left.data, _Right.data);
 	}
 	bool operator<(const pystr& _Left, const pystr& _Right) {
-		pystr _Factors[2] = { _Left,_Right };
-		return std::strcmp(_Factors[0].data_to_char(), _Factors[1].data_to_char()) < 0;
+		return std::wcscmp(_Left.data, _Right.data) < 0;
 	}
 	bool operator<=(const pystr& _Left, const pystr& _Right) {
-		pystr _Factors[2] = { _Left,_Right };
-		return std::strcmp(_Factors[0].data_to_char(), _Factors[1].data_to_char()) <= 0;
+		return std::wcscmp(_Left.data, _Right.data) <= 0;
 	}
 	bool operator>(const pystr& _Left, const pystr& _Right) {
-		pystr _Factors[2] = { _Left,_Right };
-		return std::strcmp(_Factors[0].data_to_char(), _Factors[1].data_to_char()) > 0;
+		return std::wcscmp(_Left.data, _Right.data) > 0;
 	}
 	bool operator>=(const pystr& _Left, const pystr& _Right) {
-		pystr _Factors[2] = { _Left,_Right };
-		return std::strcmp(_Factors[0].data_to_char(), _Factors[1].data_to_char()) >= 0;
+		return std::wcscmp(_Left.data, _Right.data) >= 0;
 	}
 	pystr operator*(const pystr& _Str, int _Val) {
 		if (_Val <= 0) return ""p;
@@ -214,6 +233,7 @@ namespace py {
 	void pystr::set_size(int _Val) {
 		this->size = _Val;
 		this->_RB.flag = true;
+		if(is_range_base != nullptr) this->is_range_base->_RB.flag = true;
 	}
 
 	char* pystr::data_to_char() {
@@ -241,6 +261,7 @@ namespace py {
 		}
 		for (int _Idx = 0; _Idx < _Size; _Idx++) {
 			this->_RB.data[_Idx] = this->data[_Idx];
+			this->_RB.data[_Idx].is_range_base = this;
 		}
 		this->_RB.flag = false;
 	}
@@ -269,9 +290,7 @@ namespace py {
 		}
 		if (this->volume <= _Ssize) this->extend_volume();
 		this->data[_Ssize] = '\0';
-		this->size = _Ssize;
-
-		this->_RB.flag = true;
+		this->set_size(_Ssize);
 	}
 	pystr::~pystr() {
 		free(this->data);
@@ -289,6 +308,17 @@ namespace py {
 		return this->data_to_char();
 	}
 
+
+	//pystr capitalize();
+	//pystr casefold();
+	pystr pystr::center(const int _Length, const pystr& _Val) {
+		if (_Val.size != 1) throw "TypeError: The fill character must be exactly one character long"p;
+		int _Ssize = this->size;
+		pystr _rStr = (_Val * (((_Length + 1) / 2) - ((_Ssize + 1) / 2))) + *this;
+
+		_rStr += _Val * (_Length - _rStr.size);
+		return _rStr;
+	}
 	int pystr::count(const pystr& _Str, int _Begin) {
 		return this->count(_Str, _Begin, this->size);
 	}
@@ -307,7 +337,16 @@ namespace py {
 			_Tstr = _Tstr(_Res + _Ssize, "");
 		}
 	}
-
+	bool pystr::endswith(const pystr& _Str, int _Begin) {
+		return this->endswith(_Str, _Begin, this->size);
+	}
+	bool pystr::endswith(const pystr& _Str, int _Begin, int _End) {
+		return (*this)(_Begin, _End)(-_Str.size, "") == _Str;
+	}
+	pystr pystr::expandtabs(int _Val) {
+		if (_Val > 1) _Val -= 1;
+		return this->replace("\t", " "p * _Val);
+	}
 	int pystr::find(const pystr& _Str, int _Begin) {
 		return this->find(_Str, _Begin, this->size);
 	}
@@ -341,50 +380,60 @@ namespace py {
 		}
 		return -1;
 	}
-
-	int pystr::rfind(const pystr& _Str, int _Begin) {
-		return this->rfind(_Str, _Begin, this->size);
+	int pystr::index(const pystr& _Str, int _Begin) {
+		return this->index(_Str, _Begin, this->size);
 	}
-	int pystr::rfind(const pystr& _Str, int _Begin, int _End) {
-		this->set_idx(&_Begin); this->set_idx(&_End);
-		if (_Begin < 0) _Begin = 0;
-		if (_End > this->size) _End = this->size;
-		//kmp algorithm
-		pystr _Scopy = _Str;
-		int _Ssize = _Scopy.size, _piP2 = 0;
-		pylist<int> _kmp_pi(_Ssize, 0); //get pi array
-		for (int _piP1 = _Ssize - 1; _piP1 >= 0; _piP1--) {
-			while (_piP2 > 0 && _Scopy[_piP1] != _Scopy[_piP2]) {
-				_piP2 = *_kmp_pi[_piP2 - 1];
-			}
-			if (_Scopy[_piP1] == _Scopy[_piP2] && _piP1 != _piP2) {
-				*_kmp_pi[_piP1] = ++_piP2;
-			}
-		}
-
-		//find string
-		pystr _Tstr = this->operator()(_Begin, _End);
-		std::cout << _Tstr;
-		int _Tsize = _Tstr.size;
-		_piP2 = 0;
-		for (int _piP1 = _Tsize - 1; _piP1 >= 0; _piP1--) {
-			while (_piP2 > 0 && _Tstr[_piP1] != _Scopy[_piP2]) {
-				_piP2 = *_kmp_pi[_piP2 - 1];
-			}
-			if (_Tstr[_piP1] == _Scopy[_piP2]) {
-				if (_piP2 == _Ssize - 1) return _piP1 + _Begin;
-				_piP2++;
-			}
-		}
-		return -1;
-	}
-
-	int pystr::index(const pystr& _Str) {
-		int _Res = find(_Str);
+	int pystr::index(const pystr& _Str, int _Begin, int _End) {
+		int _Res = find(_Str, _Begin, _End);
 		if (_Res == -1) throw "ValueError: substring not found"p;
 		return _Res;
 	}
-
+	bool pystr::isalnum() {
+		if (this->size == 0) return false;
+		int _Ssize = this->size;
+		for (int _Idx = 0; _Idx < _Ssize; _Idx++) {
+			if (('0' < (*this)[_Idx] && (*this)[_Idx] < '9') ||
+				('a' < (*this)[_Idx] && (*this)[_Idx] < 'z') ||
+				('A' < (*this)[_Idx] && (*this)[_Idx] < 'Z')) continue;
+			return false;
+		}
+		return true;
+	}
+	bool pystr::isalpha() {
+		if (this->size == 0) return false;
+		int _Ssize = this->size;
+		for (int _Idx = 0; _Idx < _Ssize; _Idx++) {
+			if (('a' < (*this)[_Idx] && (*this)[_Idx] < 'z') ||
+				('A' < (*this)[_Idx] && (*this)[_Idx] < 'Z')) continue;
+			return false;
+		}
+		return true;
+	}
+	bool pystr::isAscii() {
+		if (this->size == 0) return false;
+		int _Ssize = this->size;
+		for (int _Idx = 0; _Idx < _Ssize; _Idx++) {
+			if ((char(0x0) <= (*this)[_Idx] && (*this)[_Idx] <= char(0x7f))) continue;
+			return false;
+		}
+		return true;
+	}
+	//bool isdigit();
+	bool pystr::isdecimal() {
+		if (this->size == 0) return false;
+		int _Ssize = this->size;
+		for (int _Idx = 0; _Idx < _Ssize; _Idx++) {
+			if (('0' < (*this)[_Idx] && (*this)[_Idx] < '9')) continue;
+			return false;
+		}
+		return true;
+	}
+	//bool islower();
+	//bool isnumeric();
+	//bool isprintable();
+	//bool isspace();
+	//bool istitle();
+	//bool isupper();
 	pystr pystr::join(const pystr& _Str) {
 		int _Ssize = _Str.size;
 		pystr _Scopy = _Str;
@@ -418,100 +467,19 @@ namespace py {
 		}
 		return _rStr;
 	}
-
-	pystr pystr::lower() {
-		pystr _rStr = *this;
-		int _Ssize = _rStr.size;
-		for (int _Idx = 0; _Idx < _Ssize; _Idx++) {
-			if ('A' <= _rStr[_Idx] && _rStr[_Idx] <= 'Z') {
-				_rStr.data[_Idx] += 'a' - 'A';
-			}
-		}
-		return _rStr;
-	}
-	pystr pystr::casefold() {
-		return this->lower();
-	}
-	pystr pystr::upper() {
-		pystr _rStr = *this;
-		int _Ssize = _rStr.size;
-		for (int _Idx = 0; _Idx < _Ssize; _Idx++) {
-			if ('a' <= _rStr[_Idx] && _rStr[_Idx] <= 'z') {
-				_rStr.data[_Idx] += 'A' - 'a';
-			}
-		}
-		return _rStr;
-	}
-	pystr pystr::swapcase() {
-		pystr _rStr = *this;
-		int _Ssize = _rStr.size;
-		for (int _Idx = 0; _Idx < _Ssize; _Idx++) {
-			if ('a' <= _rStr[_Idx] && _rStr[_Idx] <= 'z') {
-				_rStr.data[_Idx] = toupper(_rStr.data[_Idx]);
-			}
-			else if ('A' <= _rStr[_Idx] && _rStr[_Idx] <= 'Z') {
-				_rStr.data[_Idx] = tolower(_rStr.data[_Idx]);
-			}
-		}
-		return _rStr;
-	}
-	pystr pystr::capitalize() {
-		pystr _rStr = *this;
-		int _Ssize = _rStr.size;
-		bool _isUpper = true;
-		for (int _Idx = 0; _Idx < _Ssize; _Idx++) {
-			if (_isUpper == true) {
-				if ('a' <= _rStr[_Idx] && _rStr[_Idx] <= 'z') {
-					_rStr.data[_Idx] = toupper(_rStr.data[_Idx]);
-				}
-				_isUpper = false;
-			}
-			else if (_isUpper == false && 'A' <= _rStr[_Idx] && _rStr[_Idx] <= 'Z') {
-				_rStr.data[_Idx] = tolower(_rStr.data[_Idx]);
-			}
-		}
-		return _rStr;
-	}
-	pystr pystr::title() {
-		pystr _rStr = *this;
-		int _Ssize = _rStr.size;
-		bool _isUpper = true;
-		for (int _Idx = 0; _Idx < _Ssize; _Idx++) {
-			if (_isUpper == true) {
-				if ('a' <= _rStr[_Idx] && _rStr[_Idx] <= 'z') {
-					_rStr.data[_Idx] = toupper(_rStr.data[_Idx]);
-				}
-				_isUpper = false;
-			}
-			else if (_isUpper == false && 'A' <= _rStr[_Idx] && _rStr[_Idx] <= 'Z') {
-				_rStr.data[_Idx] = tolower(_rStr.data[_Idx]);
-			}
-			else if (_rStr[_Idx] == " " || _rStr[_Idx] == "\n") {
-				_isUpper = true;
-			}
-		}
-		return _rStr;
-	}
-	pystr pystr::strip() {
-		pystr _rStr = *this;
-		return _rStr.lstrip().rstrip();
-	}
+	//pystr ljust(const int length, const pystr& _Val = ' ');
+	//pystr lower();
 	pystr pystr::lstrip() {
-		pystr _Str = *this;
-		int _Idx = 0, _Ssize = _Str.size;
-		while (_Idx < _Ssize && _Str[_Idx] == ' ') _Idx++;
-		if (_Idx == _Ssize) return _Str = "";
-		return _Str(_Idx, "");
+		pystr _Cmp = " \t"p;
+		int _Idx = 0, _Ssize = this->size;
+		while (_Idx < _Ssize && _Cmp.find(this->data[_Idx]) != -1) _Idx++;
+		if (_Idx == _Ssize) return "";
+		return this->operator()(_Idx, "");
 	}
-	pystr pystr::rstrip() {
-		pystr _Str = *this;
-		int _Idx = _Str.size;
-		while (_Idx > 0 && _Str[_Idx - 1] == ' ') _Idx--;
-		if (_Idx == 0) return _Str = "";
-		return _Str(0, _Idx);
-	}
+	//pystr maketrance(const pystr& _Tstr, const pystr& _VStr, const pystr& _RStr = "");
+	//pylist<pystr> partition(const pystr& _Str);
 	pystr pystr::replace(const pystr& _Tstr, const pystr& _Val) {
-		return this->replace(_Tstr, _Val, this->count(_Tstr));
+		return this->replace(_Tstr, _Val, this->size);
 	}
 	pystr pystr::replace(const pystr& _Tstr, const pystr& _Val, int _Cnt) {
 		pystr _rStr;
@@ -525,6 +493,51 @@ namespace py {
 			_Str = _Str(_Res + _Tsize, "");
 			_Cnt--;
 		}
+	}
+	int pystr::rfind(const pystr& _Str, int _Begin) {
+		return this->rfind(_Str, _Begin, this->size);
+	}
+	int pystr::rfind(const pystr& _Str, int _Begin, int _End) {
+		this->set_idx(&_Begin); this->set_idx(&_End);
+		if (_Begin < 0) _Begin = 0;
+		if (_End > this->size) _End = this->size;
+		//kmp algorithm
+		pystr _Scopy = _Str;
+		int _Ssize = _Scopy.size, _piP2 = 0;
+		pylist<int> _kmp_pi(_Ssize, 0); //get pi array
+		for (int _piP1 = _Ssize - 1; _piP1 >= 0; _piP1--) {
+			while (_piP2 > 0 && _Scopy[_piP1] != _Scopy[_piP2]) {
+				_piP2 = *_kmp_pi[_piP2 - 1];
+			}
+			if (_Scopy[_piP1] == _Scopy[_piP2] && _piP1 != _piP2) {
+				*_kmp_pi[_piP1] = ++_piP2;
+			}
+		}
+
+		//find string
+		pystr _Tstr = this->operator()(_Begin, _End);
+		int _Tsize = _Tstr.size;
+		_piP2 = 0;
+		for (int _piP1 = _Tsize - 1; _piP1 >= 0; _piP1--) {
+			while (_piP2 > 0 && _Tstr[_piP1] != _Scopy[_piP2]) {
+				_piP2 = *_kmp_pi[_piP2 - 1];
+			}
+			if (_Tstr[_piP1] == _Scopy[_piP2]) {
+				if (_piP2 == _Ssize - 1) return _piP1 + _Begin;
+				_piP2++;
+			}
+		}
+		return -1;
+	}
+	//int rindex(const pystr& _Str, int _Begin, int _End);
+	//pylist rjust(const int length, const pystr& _Val = ' ');
+	//pylist<pystr> rpartition(const pystr& _Str);
+	pystr pystr::rstrip() {
+		pystr _Str = *this, _Cmp = " \t"p;
+		int _Idx = _Str.size;
+		while (_Idx > 0 && _Cmp.find(_Str[_Idx - 1]) != -1) _Idx--;
+		if (_Idx == 0) return _Str = "";
+		return _Str(0, _Idx);
 	}
 	pylist<pystr> pystr::split(const pystr& _Tstr) {
 		pylist<pystr> _rList;
@@ -541,59 +554,17 @@ namespace py {
 			_Str = _Str(_Res + _Tsize, "");
 		}
 	}
-	pystr pystr::center(const int _Length, const pystr& _Val) {
-		if (_Val.size != 1) throw "TypeError: The fill character must be exactly one character long"p;
-		int _Ssize = this->size;
-		pystr _rStr = (_Val * (((_Length + 1) / 2) - ((_Ssize + 1) / 2))) + *this;
-
-		_rStr += _Val * (_Length - _rStr.size);
-		return _rStr;
+	//pylist<pystr> splitlines(const bool _keepLineBreak = False);
+	//bool startwith(const pystr& _Str, int _Begin, int _End);
+	pystr pystr::strip() {
+		pystr _rStr = *this;
+		return _rStr.lstrip().rstrip();
 	}
-	bool pystr::endswith(const pystr& _Str, int _Begin) {
-		return this->endswith(_Str, _Begin, this->size);
-	}
-	bool pystr::endswith(const pystr& _Str, int _Begin, int _End) {
-		return (*this)(_Begin, _End)(-_Str.size, "") == _Str;
-	}
-	pystr pystr::expandtabs(int _Val) {
-		if (_Val > 1) _Val -= 1;
-		return this->replace("\t", " "p * _Val);
-	}
-	bool pystr::isalnum() {
-		int _Ssize = this->size;
-		for (int _Idx = 0; _Idx < _Ssize; _Idx++) {
-			if (('0' < (*this)[_Idx] && (*this)[_Idx] < '9') ||
-				('a' < (*this)[_Idx] && (*this)[_Idx] < 'z') ||
-				('A' < (*this)[_Idx] && (*this)[_Idx] < 'Z')) continue;
-			return false;
-		}
-		return true;
-	}
-	bool pystr::isalpa() {
-		int _Ssize = this->size;
-		for (int _Idx = 0; _Idx < _Ssize; _Idx++) {
-			if (('a' < (*this)[_Idx] && (*this)[_Idx] < 'z') ||
-				('A' < (*this)[_Idx] && (*this)[_Idx] < 'Z')) continue;
-			return false;
-		}
-		return true;
-	}
-	bool pystr::isAscii() {
-		int _Ssize = this->size;
-		for (int _Idx = 0; _Idx < _Ssize; _Idx++) {
-			if ((char(0x0) <= (*this)[_Idx] && (*this)[_Idx] <= char(0x7f))) continue;
-			return false;
-		}
-		return true;
-	}
-	bool pystr::isdecimal() {
-		int _Ssize = this->size;
-		for (int _Idx = 0; _Idx < _Ssize; _Idx++) {
-			if (('0' < (*this)[_Idx] && (*this)[_Idx] < '9')) continue;
-			return false;
-		}
-		return true;
-	}
+	//pystr swapcase();
+	//pystr title();
+	//pystr translate(std::map<pystr,pystr> _Dict);
+	//pystr upper();
+	//pystr zfill(const int _Cnt);
 
 	pystr pystr::operator[](int _Idx) {
 		this->set_idx(&_Idx);
@@ -602,14 +573,11 @@ namespace py {
 		return _rChar[0];
 	};
 	pystr pystr::operator()(int _Begin, int _End, const int _Jmp) {
-		this->set_idx(&_Begin);
-		this->set_idx(&_End);
-		this->check_idx_out_of_range(_Begin);
-		this->check_idx_out_of_range(_End - ((_End > 0) ? 1 : 0));
+		this->set_large_idx(&_Begin);
+		this->set_large_idx(&_End);
 
 		pystr _rStr;
-		pystr _Str = *this;
-		for (int _Idx = _Begin; _Idx < _End; _Idx += _Jmp) _rStr += _Str[_Idx];
+		for (int _Idx = _Begin; _Idx < _End; _Idx += _Jmp) _rStr += this->data[_Idx];
 		return _rStr;
 	};
 	pystr pystr::operator()(const char* _Begin, int _End, const int _Jmp) {
@@ -622,15 +590,14 @@ namespace py {
 		return this->operator()(0, this->size, _Jmp);
 	}
 
+#pragma warning(push)
+#pragma warning(disable: 4996)
 	pystr& pystr::operator=(const pystr& _Right) {
-		int _Rsize = _Right.size;
-		for (int i = 0; i < _Rsize; i++) {
-			if (this->is_over(i)) this->extend_volume();
-			this->data[i] = _Right.data[i];
-		}
-		if (this->is_over(_Rsize)) this->extend_volume();
-		this->data[_Rsize] = '\0';
-		this->set_size(_Rsize);
+		int _Null_Idx = _Right.size;
+		while (this->is_over(_Null_Idx)) this->extend_volume();
+		wcscpy(this->data, _Right.data);
+		this->data[_Null_Idx] = '\0';
+		this->set_size(_Null_Idx);
 		return *this;
 	}
 	pystr& pystr::operator=(const char* _Right) {
@@ -639,7 +606,6 @@ namespace py {
 		MultiByteToWideChar(CP_ACP, 0, _Right, strlen(_Right), this->data, nLen);
 		this->data[nLen] = '\0';
 		this->set_size(nLen);
-		this->_RB.flag = true;
 		return *this;
 	}
 	pystr& pystr::operator=(const char _Right) {
@@ -648,14 +614,11 @@ namespace py {
 	}
 	pystr& pystr::operator=(const wchar_t* _Right) {
 		int _Idx = 0;
-		for (; _Right[_Idx] != NULL; _Idx++) {
-			if (this->is_over(_Idx)) this->extend_volume();
-			this->data[_Idx] = _Right[_Idx];
-		}
-		if (this->is_over(_Idx)) this->extend_volume();
-		this->data[_Idx] = '\0';
-		this->set_size(_Idx);
-		this->_RB.flag = true;
+		int _Null_Idx = this->size + wcslen(_Right);
+		while (this->is_over(_Null_Idx)) this->extend_volume();
+		wcscpy(this->data, _Right);
+		this->data[_Null_Idx] = '\0';
+		this->set_size(_Null_Idx);
 		return *this;
 	}
 	pystr& pystr::operator=(const wchar_t _Right) {
@@ -663,26 +626,48 @@ namespace py {
 		this->data[0] = _Right;
 		this->data[1] = '\0';
 		this->set_size(1);
-		this->_RB.flag = true;
 		return *this;
 	}
-
 	pystr& pystr::operator+=(const pystr& _Right) {
-		int _Rsize = _Right.size;
-		int _Ssize = this->size;
-		int _Null_Idx = _Ssize + _Rsize;
-		for (int _Idx = _Ssize; _Idx < _Null_Idx; _Idx++) {
-			if (this->is_over(_Idx)) this->extend_volume();
-			this->data[_Idx] = _Right.data[_Idx - _Ssize];
-		}
-		if (this->is_over(_Null_Idx)) this->extend_volume();
+		int _Null_Idx = this->size + _Right.size;
+		while (this->is_over(_Null_Idx)) this->extend_volume();
+		wcscat(this->data, _Right.data);
 		this->data[_Null_Idx] = '\0';
 		this->set_size(_Null_Idx);
-		this->_RB.flag = true;
 		return *this;
 	}
+#pragma warning(pop)
 
-	int len(pystr _Str) {
+	int len(const pystr& _Str) {
 		return _Str.size;
+	}
+	int ord(const pystr& _Str) {
+		pystr _Scopy = _Str;
+		if (len(_Scopy) > 1) throw "ord() expected a character, but string of length "p + str(len(_Scopy)) + " found"p;
+		return (int)(_Scopy.data[0]);
+	}
+	pystr chr(const int& _Val) {
+		if (!(0 <= _Val && _Val <= 0x10FFFF)) throw "chr() arg not in range("p + str(_Val) + ")"p;
+		return (wchar_t)_Val;
+	}
+	pystr str(const double& _Val) {
+		pystr _rStr;
+		int _IntVal = (_Val + 0.00000000005);
+		double _DotVal = (_Val + 0.00000000005) - _IntVal;
+		while (_IntVal > 0) {
+			_rStr = chr((_IntVal % 10) + ord("0")) + _rStr;
+			_IntVal /= 10;
+		}
+		int _Time = 10;
+		//              1234567890
+		double _Cmp = 0.0000000001;
+		if (_DotVal > _Cmp) _rStr += ".";
+		while (_Time-- && _DotVal > _Cmp) {
+			_DotVal *= 10;
+			_rStr += chr((int)_DotVal + ord("0"));
+			_DotVal -= (int)_DotVal;
+			_Cmp *= 10;
+		}
+		return _rStr;
 	}
 }
