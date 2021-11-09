@@ -1,6 +1,6 @@
 # python
 
-python to cpp.
+python to c++.
 pystr, pylist is uploaded.
 
 # Something that different with python
