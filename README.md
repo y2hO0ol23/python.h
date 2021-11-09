@@ -1,9 +1,9 @@
 <h1> Python </h1>
 Project that move python to c++.
 
-<h1> Something that different with python </h1>
+<h2> Something that different with python </h2>
 <ul>
-  <li> <h2>pystr</h2> </li>
+  <li> <h3>pystr</h3> </li>
   <ul>
     <li> Use index slicing with () </li>
     <li> You need to use ""p when you want to make python string. ex) "Python"p, auto a = "Hello World!"p </li>
@@ -11,7 +11,7 @@ Project that move python to c++.
   </ul>
 </ul>
 <ul>
-  <li> <h2>pylist</h2> </li>
+  <li> <h3>pylist</h3> </li>
   <ul>
     <li> Use index slicing with (). </li>
     <li> use del() function to remove element. </li>
@@ -19,7 +19,7 @@ Project that move python to c++.
   </ul>
 </ul>
 
-<h1> Degree of progress </h1>
+<h2> Degree of progress </h2>
 <ul>
   <li>pystr // some functions left.</li>
   <li>pylist // all done.</li>
