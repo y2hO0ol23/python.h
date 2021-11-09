@@ -1,9 +1,9 @@
-﻿#pragma once
+#pragma once
+#ifndef _PYTHONSTRNG_
+#define _PYTHONSTRNG_
 #include <iostream>
-#include <algorithm>
 #include <windows.h>
 #include "pylist.h"
-#include <map>
 
 namespace py {
 	class pystr;
@@ -196,22 +196,22 @@ namespace py {
 		return _rStr += _Right;
 	}
 	bool operator==(const pystr& _Left, const pystr& _Right) {
-		return !std::wcscmp(_Left.data, _Right.data);
+		return !wcscmp(_Left.data, _Right.data);
 	}
 	bool operator!=(const pystr& _Left, const pystr& _Right) {
-		return std::wcscmp(_Left.data, _Right.data);
+		return wcscmp(_Left.data, _Right.data);
 	}
 	bool operator<(const pystr& _Left, const pystr& _Right) {
-		return std::wcscmp(_Left.data, _Right.data) < 0;
+		return wcscmp(_Left.data, _Right.data) < 0;
 	}
 	bool operator<=(const pystr& _Left, const pystr& _Right) {
-		return std::wcscmp(_Left.data, _Right.data) <= 0;
+		return wcscmp(_Left.data, _Right.data) <= 0;
 	}
 	bool operator>(const pystr& _Left, const pystr& _Right) {
-		return std::wcscmp(_Left.data, _Right.data) > 0;
+		return wcscmp(_Left.data, _Right.data) > 0;
 	}
 	bool operator>=(const pystr& _Left, const pystr& _Right) {
-		return std::wcscmp(_Left.data, _Right.data) >= 0;
+		return wcscmp(_Left.data, _Right.data) >= 0;
 	}
 	pystr operator*(const pystr& _Str, int _Val) {
 		if (_Val <= 0) return ""p;
@@ -863,5 +863,6 @@ namespace py {
 	pystr c2py(const pystr& _Str) {
 		return _Str;
 	}
-}
 #pragma warning(pop)
+}
+#endif
