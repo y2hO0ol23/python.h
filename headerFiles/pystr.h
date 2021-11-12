@@ -14,7 +14,7 @@ namespace py {
 	class pylist_node {
 		friend class pylist<T>;
 	private:
-		T data_;
+		T range_data_;
 		pylist_node<T>* next_;
 		pylist_node<T>* prev_;
 	};
@@ -29,17 +29,17 @@ namespace py {
 		pylist_node<T>* tail_ = nullptr;
 		int size_ = 0;
 
-		void set_idx(int* idx) const;
-		void check_idx_out_of_range(const int idx) const;
+		void SetIdx(int* idx) const;
+		void isIdxOutOfRange(const int idx) const;
 
-		pylist_node<T>* make_new_node(const T& value);
-		pylist_node<T>* found_node(const int idx) const;
-		void remove_node(pylist_node<T>* node_ptr);
+		pylist_node<T>* MakeNewNode(const T& value);
+		pylist_node<T>* FindNode(const int idx) const;
+		void RemveNode(pylist_node<T>* node_ptr);
 
-		T* data_;
-		int volume_ = 0;
-		bool flag_ = false;
-		void set_data();
+		T* range_data_;
+		int range_volume_ = 0;
+		bool is_changed_ = false;
+		void SetRangeData();
 	public:
 		pylist();
 		pylist(int count, T value);
@@ -92,25 +92,25 @@ namespace py {
 		return ret_value += right;
 	}
 
-	template <class T> void pylist<T>::set_idx(int* idx) const {
+	template <class T> void pylist<T>::SetIdx(int* idx) const {
 		if (*idx < 0) *idx += this->size_;
 	}
-	template <class T> void pylist<T>::check_idx_out_of_range(const int idx)  const {
+	template <class T> void pylist<T>::isIdxOutOfRange(const int idx)  const {
 		if (idx < 0 || this->size_ <= idx) throw py::to_py("IndexError: list index out of range");
 	}
 
-	template <class T> pylist_node<T>* pylist<T>::make_new_node(const T& value) {
+	template <class T> pylist_node<T>* pylist<T>::MakeNewNode(const T& value) {
 		pylist_node<T>* new_node = (pylist_node<T>*)calloc(1, sizeof(pylist_node<T>));
-		new_node->data_ = value;
+		new_node->range_data_ = value;
 		new_node->next_ = nullptr;
 		new_node->prev_ = nullptr;
 		this->size_++;
-		this->flag_ = true;
+		this->is_changed_ = true;
 		return new_node;
 	}
-	template <class T> pylist_node<T>* pylist<T>::found_node(int idx) const {
-		this->set_idx(&idx);
-		this->check_idx_out_of_range(idx);
+	template <class T> pylist_node<T>* pylist<T>::FindNode(int idx) const {
+		this->SetIdx(&idx);
+		this->isIdxOutOfRange(idx);
 
 		pylist_node<T>* ret_value;
 		if (idx < (this->size_ / 2)) {
@@ -132,7 +132,7 @@ namespace py {
 		return ret_value;
 	}
 
-	template <class T> void pylist<T>::remove_node(pylist_node<T>* node_ptr) {
+	template <class T> void pylist<T>::RemveNode(pylist_node<T>* node_ptr) {
 		if (node_ptr->prev_ == nullptr)	this->head_ = node_ptr->next_;
 		else								node_ptr->prev_->next_ = node_ptr->next_;
 		if (node_ptr->next_ == nullptr)	this->tail_ = node_ptr->prev_;
@@ -140,21 +140,21 @@ namespace py {
 		
 		free(node_ptr);
 		this->size_--;
-		this->flag_ = true;
+		this->is_changed_ = true;
 	}
 
-	template <class T> void pylist<T>::set_data() {
+	template <class T> void pylist<T>::SetRangeData() {
 		int size = this->size_;
-		if (this->volume_ == 0) {
-			this->data_ = (T*)calloc(size, sizeof(T) * size);
-			this->volume_ = size;
+		if (this->range_volume_ == 0) {
+			this->range_data_ = (T*)calloc(size, sizeof(T) * size);
+			this->range_volume_ = size;
 		}
 		else {
-			while (this->volume_ < size) this->volume_ *= 2;
+			while (this->range_volume_ < size) this->range_volume_ *= 2;
 			while (1) {
-				T* temp = (T*)realloc(this->data_, sizeof(T) * this->volume_);
+				T* temp = (T*)realloc(this->range_data_, sizeof(T) * this->range_volume_);
 				if (temp != NULL) {
-					this->data_ = temp;
+					this->range_data_ = temp;
 					break;
 				}
 			}
@@ -163,11 +163,11 @@ namespace py {
 		pylist_node<T>* node = this->head_;
 		int idx = 0;
 		while(node != nullptr) {
-			this->data_[idx] = node->data_;
+			this->range_data_[idx] = node->range_data_;
 			node = node->next_;
 			idx++;
 		}
-		this->flag_ = false;
+		this->is_changed_ = false;
 	}
 
 	template <class T> pylist<T>::pylist() {}
@@ -189,16 +189,16 @@ namespace py {
 	}
 
 	template <class T> T* pylist<T>::begin() {
-		if (this->flag_) this->set_data();
-		return &this->data_[0];
+		if (this->is_changed_) this->SetRangeData();
+		return &this->range_data_[0];
 	}
 	template <class T> T* pylist<T>::end() {
-		if (this->flag_) this->set_data();
-		return &this->data_[this->size_];
+		if (this->is_changed_) this->SetRangeData();
+		return &this->range_data_[this->size_];
 	}
 
 	template <class T> pylist<T>& pylist<T>::append(const T& value) {
-		pylist_node<T>* new_node = this->make_new_node(value);
+		pylist_node<T>* new_node = this->MakeNewNode(value);
 		new_node->prev_ = this->tail_;
 		if (this->tail_ != nullptr) this->tail_->next_ = new_node;
 		this->tail_ = new_node;
@@ -206,33 +206,33 @@ namespace py {
 		return *this;
 	}
 	template <class T> T pylist<T>::pop(int idx) {
-		this->set_idx(&idx);
-		this->check_idx_out_of_range(idx);
+		this->SetIdx(&idx);
+		this->isIdxOutOfRange(idx);
 
-		pylist_node<T>* node = this->found_node(idx);
-		T ret_value = node->data_;
-		this->remove_node(node);
+		pylist_node<T>* node = this->FindNode(idx);
+		T ret_value = node->range_data_;
+		this->RemveNode(node);
 
 		return ret_value;
 	}
 	template <class T> pylist<T>& pylist<T>::del(int idx) {
-		this->set_idx(&idx);
-		this->check_idx_out_of_range(idx);
+		this->SetIdx(&idx);
+		this->isIdxOutOfRange(idx);
 
 		return *this = (*this)("", idx) + (*this)(idx + 1, "");
 	}
 	template <class T> pylist<T>& pylist<T>::del(const int start, const int end, const int distance) {
 		int idx = start, idx_end = end;
-		this->set_idx(&idx);
-		this->set_idx(&idx_end);
-		this->check_idx_out_of_range(idx);
-		this->check_idx_out_of_range(idx_end - ((idx_end > 0) ? 1 : 0));
+		this->SetIdx(&idx);
+		this->SetIdx(&idx_end);
+		this->isIdxOutOfRange(idx);
+		this->isIdxOutOfRange(idx_end - ((idx_end > 0) ? 1 : 0));
 
-		pylist_node<T>* node = this->found_node(idx);
+		pylist_node<T>* node = this->FindNode(idx);
 		if (!(idx < idx_end)) return *this;
 		while (1) {
 			pylist_node<T>* next = node->next_;
-			this->remove_node(node); idx_end--;
+			this->RemveNode(node); idx_end--;
 			node = next;
 			idx += distance - 1;
 			if (!(idx < idx_end)) return *this;
@@ -240,7 +240,7 @@ namespace py {
 				int distance_cnt = distance - 1;
 				while (distance_cnt--) node = node->next_;
 			}
-			else node = this->found_node(idx);
+			else node = this->FindNode(idx);
 		}
 	}
 	template <class T> pylist<T>& pylist<T>::del(const char* start, const int end, const int distance) {
@@ -275,22 +275,22 @@ namespace py {
 		int idx = 0;
 		pylist_node<T>* node = this->head_;
 		while (node != nullptr) {
-			if (node->data_ == value) return idx;
+			if (node->range_data_ == value) return idx;
 			node = node->next_;
 			idx++;
 		}
 		throw py::to_py("ValueError: value not in list");
 	}
 	template <class T> pylist<T>& pylist<T>::insert(int idx, T value) {
-		this->set_idx(&idx);
-		this->check_idx_out_of_range(idx - ((idx > 0) ? 1 : 0));
+		this->SetIdx(&idx);
+		this->isIdxOutOfRange(idx - ((idx > 0) ? 1 : 0));
 
 		if (idx == this->size_) {
 			this->append(value);
 		}
 		else {
-			pylist_node<T>* node = this->found_node(idx);
-			pylist_node<T>* new_node = this->make_new_node(value);
+			pylist_node<T>* node = this->FindNode(idx);
+			pylist_node<T>* new_node = this->MakeNewNode(value);
 			new_node->next_ = node;
 			new_node->prev_ = node->prev_;
 			if (node->prev_ != nullptr) node->prev_->next_ = new_node;
@@ -307,7 +307,7 @@ namespace py {
 		int count = 0;
 		pylist_node<T>* node = this->head_;
 		while (node != nullptr) {
-			if (node->data_ == value) count++;
+			if (node->range_data_ == value) count++;
 			node = node->next_;
 		}
 		return count;
@@ -325,10 +325,10 @@ namespace py {
 	}
 
 	template <class T> T* pylist<T>::operator[](int idx) const {
-		this->set_idx(&idx);
-		this->check_idx_out_of_range(idx);
+		this->SetIdx(&idx);
+		this->isIdxOutOfRange(idx);
 
-		return &(this->found_node(idx)->data_);
+		return &(this->FindNode(idx)->range_data_);
 	}
 	template <class T> pylist<T>& pylist<T>::operator=(std::initializer_list<T> right) {
 		this->clear();
@@ -341,7 +341,7 @@ namespace py {
 		this->clear();
 		pylist_node<T>* node = right.head_;
 		while(node != nullptr) {
-			this->append(node->data_);
+			this->append(node->range_data_);
 			node = node->next_;
 		}
 		return *this;
@@ -353,7 +353,7 @@ namespace py {
 		this->tail_ = temp.tail_;
 
 		this->size_ += temp.size_;
-		this->flag_ = true;
+		this->is_changed_ = true;
 		
 		temp.head_ = nullptr; temp.tail_ = nullptr;
 		temp.size_ = 0;
@@ -374,17 +374,17 @@ namespace py {
 
 	template <class T> pylist<T> pylist<T>::operator()(const int start, const int end, const int distance) const {
 		int idx = start, idx_end = end;
-		this->set_idx(&idx);
-		this->set_idx(&idx_end);
-		this->check_idx_out_of_range(idx);
-		this->check_idx_out_of_range(idx_end - ((idx_end > 0) ? 1 : 0));
+		this->SetIdx(&idx);
+		this->SetIdx(&idx_end);
+		this->isIdxOutOfRange(idx);
+		this->isIdxOutOfRange(idx_end - ((idx_end > 0) ? 1 : 0));
 
 		pylist<T> ret_value;
 		int size = this->size_;
-		pylist_node<T>* node = this->found_node(idx);
+		pylist_node<T>* node = this->FindNode(idx);
 		if (!(idx < idx_end)) return ret_value;
 		while (1) {
-			ret_value.append(node->data_);
+			ret_value.append(node->range_data_);
 			
 			idx += distance;
 			if (!(idx < idx_end)) return ret_value;
@@ -392,7 +392,7 @@ namespace py {
 				int distancecount = distance;
 				while (distancecount--) node = node->next_;
 			}
-			else node = this->found_node(idx);
+			else node = this->FindNode(idx);
 		}
 	}
 	template <class T> pylist<T> pylist<T>::operator()(const char* start, const int end, const int distance) const {
