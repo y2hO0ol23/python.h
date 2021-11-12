@@ -12,10 +12,10 @@ namespace py {
 	using cWCHAR	= const wchar_t;
 	using cPYSTR	= const pystr;
 
-	cINT len(cPYSTR& ps);
-	cINT ord(cPYSTR& ps);
-	cPYSTR chr(cINT& unicode);
-	cPYSTR str(const double& number);
+	int len(cPYSTR& ps);
+	int ord(cPYSTR& ps);
+	pystr chr(cINT& unicode);
+	pystr str(const double& number);
 
 	std::ostream& operator<<(std::ostream& os, cPYSTR& value);
 	std::istream& operator>>(std::istream& is, pystr& value);
@@ -44,8 +44,8 @@ namespace py {
 		friend bool operator>(cPYSTR& left, cPYSTR& right);
 		friend bool operator>=(cPYSTR& left, cPYSTR& right);
 		friend pystr operator*(cPYSTR& left, cINT count);
-		friend cINT len(cPYSTR& ps);
-		friend cINT ord(cPYSTR& ps);
+		friend int len(cPYSTR& ps);
+		friend int ord(cPYSTR& ps);
 	private:
 		int length_ = 0;
 		int volume_ = 0;
@@ -789,18 +789,18 @@ namespace py {
 
 #pragma warning(push)
 #pragma warning(disable: 4244)
-	cINT len(cPYSTR& ps) {
+	int len(cPYSTR& ps) {
 		return ps.length_;
 	}
-	cINT ord(cPYSTR& ps) {
+	int ord(cPYSTR& ps) {
 		if (len(ps) > 1) throw "ord() expected a character, but string of length "p + str(len(ps)) + " found"p;
 		return (int)(ps.data_[0]);
 	}
-	cPYSTR chr(cINT& unicode) {
+	pystr chr(cINT& unicode) {
 		if (!(0 <= unicode && unicode <= 0x10FFFF)) throw "chr() arg not in range("p + str(unicode) + ")"p;
 		return (wchar_t)unicode;
 	}
-	cPYSTR str(const double& number) {
+	pystr str(const double& number) {
 		pystr py_str;
 		int int_value = (number + 0.00000000005);
 		double decimal_value = (number + 0.00000000005) - int_value;
@@ -820,7 +820,7 @@ namespace py {
 		}
 		return py_str;
 	}
-	cPYSTR to_py(cPYSTR& ps) {
+	pystr to_py(cPYSTR& ps) {
 		return ps;
 	}
 #pragma warning(pop)
