@@ -7,406 +7,410 @@
 
 namespace py {
 	template <class T> class pylist;
-	template <class T> class node;
+	template <class T> class pylist_node;
+	template <class T> int len(pylist<T> value);
 
 	template <class T>
-	class node {
+	class pylist_node {
 		friend class pylist<T>;
 	private:
-		T data;
-		node<T>* next; // 다음
-		node<T>* prev; // 이전
+		T data_;
+		pylist_node<T>* next_;
+		pylist_node<T>* prev_;
+	public:
+		operator T() {
+			return &data_;
+		}
 	};
 
 	template <class T>
 	class pylist {
-		template <class opT> friend std::ostream& operator<<(std::ostream& _os, const pylist<opT>& _List);
-		template <class opT> friend pylist<opT> operator+(const pylist<opT>& _Left, const pylist<opT>& _Right);
+		template <class T> friend std::ostream& operator<<(std::ostream& os, const pylist<T>& value);
+		template <class T> friend pylist<T> operator+(const pylist<T>& left, const pylist<T>& right);
+		template <class T> friend int len(const pylist<T> value);
 	private:
-		node<T>* head = nullptr; // 시작
-		node<T>* tail = nullptr; // 끝
-		int size = 0;
+		pylist_node<T>* head_ = nullptr;
+		pylist_node<T>* tail_ = nullptr;
+		int size_ = 0;
 
-		void set_idx(int* _Idx);
-		void check_idx_out_of_range(const int _Idx);
+		void set_idx(int* idx) const;
+		void check_idx_out_of_range(const int idx) const;
 
-		node<T>* make_new_node(const T& _Val);
-		node<T>* found_node(int _Idx);
-		void remove_node(node<T>* _Ptr);
+		pylist_node<T>* make_new_node(const T& value);
+		pylist_node<T>* found_node(const int idx) const;
+		void remove_node(pylist_node<T>* node_ptr);
 
-		T* data;
-		int volume = 0;
-		bool flag = false;
+		T* data_;
+		int volume_ = 0;
+		bool flag_ = false;
 		void set_data();
 	public:
 		pylist();
-		pylist(int _Size, T _Val);
-		pylist(std::initializer_list<T> _List);
-		pylist(const pylist<T>& _List);
+		pylist(int count, T value);
+		pylist(std::initializer_list<T> value);
+		pylist(const pylist<T>& value);
 		~pylist();
-		int len();
 
 		T* begin();
 		T* end();
 
-		pylist<T>& append(const T& _Val);
-		T pop(int _Idx = -1);
-		pylist<T>& del(int _Idx);
-		pylist<T>& del(int _Begin, int _End, int _Jmp = 1);
-		pylist<T>& del(const char* _Begin, int _End, int _Jmp = 1);
-		pylist<T>& del(int _Begin, const char* _End, int _Jmp = 1);
-		pylist<T>& del(const char* _Begin, const char* _End, int _Jmp = 1);
+		pylist<T>& append(const T& value);
+		T pop(const int idx = -1);
+		pylist<T>& del(const int idx);
+		pylist<T>& del(const int start, const int end, const int distance = 1);
+		pylist<T>& del(const char* start, const int end, const int distance = 1);
+		pylist<T>& del(const int start, const char* end, const int distance = 1);
+		pylist<T>& del(const char* start, const char* end, const int distance = 1);
 		pylist<T>& sort();
 		pylist<T>& reverse();
-		int index(T _Val);
-		pylist<T>& insert(int _Idx, T _Val);
-		pylist<T>& remove(T _Val);
-		int count(T _Val);
-		pylist<T>& extend(pylist<T> _List);
-		pylist<T> copy();
+		int index(const T value);
+		pylist<T>& insert(const int idx, T value);
+		pylist<T>& remove(const T value);
+		int count(const T value);
+		pylist<T>& extend(const pylist<T> _List);
+		pylist<T> copy() const;
 		pylist<T>& clear();
 
-		T* operator[](int _Idx);
+		T* operator[](int idx) const;
 		pylist<T>& operator=(std::initializer_list<T> _Right);
 		pylist<T>& operator=(const pylist<T>& _Right);
 		pylist<T>& operator+=(const pylist<T>& _Right);
-		pylist<T> operator*(int _Val);
-		pylist<T> operator()(int _Begin, int _End, const int _Jmp = 1);
-		pylist<T> operator()(const char* _Begin, int _End, const int _Jmp = 1);
-		pylist<T> operator()(int _Begin, const char* _End, const int _Jmp = 1);
-		pylist<T> operator()(const char* _Begin, const char* _End, const int _Jmp = 1);
+		pylist<T> operator*(const int value) const;
+		pylist<T> operator()(const int start, const int end, const int distance = 1) const;
+		pylist<T> operator()(const char* start, const int end, const int distance = 1) const;
+		pylist<T> operator()(const int start, const char* end, const int distance = 1) const;
+		pylist<T> operator()(const char* start, const char* end, const int distance = 1) const;
 	};
-	template <class opT> std::ostream& operator<<(std::ostream& _os, const pylist<opT>& _List) {
-		_os << "{";
-		pylist<opT> _rList = _List;
-		int _Lsize = _rList.len();
-		for (int _Idx = 0; _Idx < _Lsize - 1; _Idx++) {
-			_os << *_rList[_Idx] << ", ";
+	template <class T> std::ostream& operator<<(std::ostream& os, const pylist<T>& value) {
+		os << "{";
+		int size = value.size_;
+		for (int idx = 0; idx < size - 1; idx++) {
+			os << *value[idx] << ", ";
 		}
-		if (_Lsize) _os << *_rList[_Lsize - 1];
-		_os << "}";
-		return _os;
+		if (size) os << *value[size - 1];
+		os << "}";
+		return os;
 	}
-	template <class opT> pylist<opT> operator+(const pylist<opT>& _Left, const pylist<opT>& _Right) {
-		pylist<opT> _rList = _Left;
-		return _rList += _Right;
-	}
-
-	template <class T> void pylist<T>::set_idx(int* _Idx) {
-		if (*_Idx < 0) *_Idx += this->size;
-	}
-	template <class T> void pylist<T>::check_idx_out_of_range(const int _Idx) {
-		if (_Idx < 0 || this->size <= _Idx) throw py::c2py("IndexError: list index out of range");
+	template <class T> pylist<T> operator+(const pylist<T>& left, const pylist<T>& right) {
+		pylist<T> ret_value = left;
+		return ret_value += right;
 	}
 
-	template <class T> node<T>* pylist<T>::make_new_node(const T& _Val) {
-		node<T>* _New_Node = (node<T>*)calloc(1, sizeof(node<T>));
-		_New_Node->data = _Val;
-		_New_Node->next = nullptr;
-		_New_Node->prev = nullptr;
-		this->size++;
-		this->flag = true;
-		return _New_Node;
+	template <class T> void pylist<T>::set_idx(int* idx) const {
+		if (*idx < 0) *idx += this->size_;
 	}
-	template <class T> node<T>* pylist<T>::found_node(int _Idx) {
-		this->set_idx(&_Idx);
-		this->check_idx_out_of_range(_Idx);
+	template <class T> void pylist<T>::check_idx_out_of_range(const int idx)  const {
+		if (idx < 0 || this->size_ <= idx) throw py::to_py("IndexError: list index out of range");
+	}
 
-		node<T>* _rNode;
-		if (_Idx < (this->size / 2)) {
-			_rNode = this->head;
-			int _Idx_Cnt = 0;
-			while (_Idx_Cnt != _Idx) {
-				_rNode = _rNode->next;
-				_Idx_Cnt++;
+	template <class T> pylist_node<T>* pylist<T>::make_new_node(const T& value) {
+		pylist_node<T>* new_node = (pylist_node<T>*)calloc(1, sizeof(pylist_node<T>));
+		new_node->data_ = value;
+		new_node->next_ = nullptr;
+		new_node->prev_ = nullptr;
+		this->size_++;
+		this->flag_ = true;
+		return new_node;
+	}
+	template <class T> pylist_node<T>* pylist<T>::found_node(int idx) const {
+		this->set_idx(&idx);
+		this->check_idx_out_of_range(idx);
+
+		pylist_node<T>* ret_value;
+		if (idx < (this->size_ / 2)) {
+			ret_value = this->head_;
+			int idx_cnt = 0;
+			while (idx_cnt != idx) {
+				ret_value = ret_value->next_;
+				idx_cnt++;
 			}
 		}
 		else {
-			_rNode = this->tail;
-			int _Idx_Cnt = this->size - 1;
-			while (_Idx_Cnt != _Idx) {
-				_rNode = _rNode->prev;
-				_Idx_Cnt--;
+			ret_value = this->tail_;
+			int idx_cnt = this->size_ - 1;
+			while (idx_cnt != idx) {
+				ret_value = ret_value->prev_;
+				idx_cnt--;
 			}
 		}
-		return _rNode;
+		return ret_value;
 	}
 
-	template <class T> void pylist<T>::remove_node(node<T>* _Node_Ptr) {
-		if (_Node_Ptr->prev == nullptr)	this->head = _Node_Ptr->next;
-		else								_Node_Ptr->prev->next = _Node_Ptr->next;
-		if (_Node_Ptr->next == nullptr)	this->tail = _Node_Ptr->prev;
-		else								_Node_Ptr->next->prev = _Node_Ptr->prev;
+	template <class T> void pylist<T>::remove_node(pylist_node<T>* node_ptr) {
+		if (node_ptr->prev_ == nullptr)	this->head_ = node_ptr->next_;
+		else								node_ptr->prev_->next_ = node_ptr->next_;
+		if (node_ptr->next_ == nullptr)	this->tail_ = node_ptr->prev_;
+		else								node_ptr->next_->prev_ = node_ptr->prev_;
 		
-		free(_Node_Ptr);
-		this->size--;
-		this->flag = true;
+		free(node_ptr);
+		this->size_--;
+		this->flag_ = true;
 	}
 
 	template <class T> void pylist<T>::set_data() {
-		int _Size = this->size;
-		if (this->volume == 0) {
-			this->data = (T*)calloc(_Size, sizeof(T) * _Size);
-			this->volume = _Size;
+		int size = this->size_;
+		if (this->volume_ == 0) {
+			this->data_ = (T*)calloc(size, sizeof(T) * size);
+			this->volume_ = size;
 		}
 		else {
-			while (this->volume < _Size) this->volume *= 2;
+			while (this->volume_ < size) this->volume_ *= 2;
 			while (1) {
-				T* _Temp = (T*)realloc(this->data, sizeof(T) * this->volume);
-				if (_Temp != NULL) {
-					this->data = _Temp;
+				T* temp = (T*)realloc(this->data_, sizeof(T) * this->volume_);
+				if (temp != NULL) {
+					this->data_ = temp;
 					break;
 				}
 			}
 		}
 
-		node<T>* _Node = this->head;
-		int _Idx = 0;
-		while(_Node != nullptr) {
-			this->data[_Idx] = _Node->data;
-			_Node = _Node->next;
-			_Idx++;
+		pylist_node<T>* node = this->head_;
+		int idx = 0;
+		while(node != nullptr) {
+			this->data_[idx] = node->data_;
+			node = node->next_;
+			idx++;
 		}
-		this->flag = false;
+		this->flag_ = false;
 	}
 
 	template <class T> pylist<T>::pylist() {}
-	template <class T> pylist<T>::pylist(int _Size, T _Val) {
-		if (_Size < 0) return;
-		while (_Size--) {
-			this->append(_Val);
+	template <class T> pylist<T>::pylist(int count, T value) {
+		if (count < 0) return;
+		while (count--) {
+			this->append(value);
 		}
 	}
-	template <class T> pylist<T>::pylist(std::initializer_list<T> _List) {
-		*this = _List;
+	template <class T> pylist<T>::pylist(std::initializer_list<T> value) {
+		*this = value;
 	}
-	template <class T> pylist<T>::pylist(const pylist<T>& _List) {
-		*this = _List;
+	template <class T> pylist<T>::pylist(const pylist<T>& value) {
+		*this = value;
 	}
 
 	template <class T> pylist<T>::~pylist() {
 		this->clear();
 	}
-	template <class T> int pylist<T>::len() {
-		if (this->flag) this->set_data();
-		return this->size;
-	}
 
 	template <class T> T* pylist<T>::begin() {
-		if (this->flag) this->set_data();
-		return &this->data[0];
+		if (this->flag_) this->set_data();
+		return &this->data_[0];
 	}
 	template <class T> T* pylist<T>::end() {
-		if (this->flag) this->set_data();
-		return &this->data[this->size];
+		if (this->flag_) this->set_data();
+		return &this->data_[this->size_];
 	}
 
-	template <class T> pylist<T>& pylist<T>::append(const T& _Val) {
-		node<T>* _New_Node = this->make_new_node(_Val);
-		_New_Node->prev = this->tail;
-		if (this->tail != nullptr) this->tail->next = _New_Node;
-		this->tail = _New_Node;
-		if (this->head == nullptr) this->head = _New_Node;
+	template <class T> pylist<T>& pylist<T>::append(const T& value) {
+		pylist_node<T>* new_node = this->make_new_node(value);
+		new_node->prev_ = this->tail_;
+		if (this->tail_ != nullptr) this->tail_->next_ = new_node;
+		this->tail_ = new_node;
+		if (this->head_ == nullptr) this->head_ = new_node;
 		return *this;
 	}
-	template <class T> T pylist<T>::pop(int _Idx) {
-		this->set_idx(&_Idx);
-		this->check_idx_out_of_range(_Idx);
+	template <class T> T pylist<T>::pop(int idx) {
+		this->set_idx(&idx);
+		this->check_idx_out_of_range(idx);
 
-		node<T>* _rData_Node = this->found_node(_Idx);
-		T _rData = _rData_Node->data;
-		this->remove_node(_rData_Node);
+		pylist_node<T>* node = this->found_node(idx);
+		T ret_value = node->data_;
+		this->remove_node(node);
 
-		return _rData;
+		return ret_value;
 	}
-	template <class T> pylist<T>& pylist<T>::del(int _Idx) {
-		this->set_idx(&_Idx);
-		this->check_idx_out_of_range(_Idx);
+	template <class T> pylist<T>& pylist<T>::del(int idx) {
+		this->set_idx(&idx);
+		this->check_idx_out_of_range(idx);
 
-		return *this = this->operator()("", _Idx) + this->operator()(_Idx + 1, "");
+		return *this = (*this)("", idx) + (*this)(idx + 1, "");
 	}
-	template <class T> pylist<T>& pylist<T>::del(int _Begin, int _End, int _Jmp) {
-		this->set_idx(&_Begin);
-		this->set_idx(&_End);
-		this->check_idx_out_of_range(_Begin);
-		this->check_idx_out_of_range(_End - ((_End > 0) ? 1 : 0));
+	template <class T> pylist<T>& pylist<T>::del(int start, int end, const int distance) {
+		this->set_idx(&start);
+		this->set_idx(&end);
+		this->check_idx_out_of_range(start);
+		this->check_idx_out_of_range(end - ((end > 0) ? 1 : 0));
 
-		int _Cnt = 0;
-		node<T>* _Node = this->found_node(_Begin);
-		int Idx = _Begin; _Jmp--;
-		if (!(Idx < _End)) return *this;
+		pylist_node<T>* node = this->found_node(start);
+		int idx = start, idx_end = end;
+		if (!(idx < end)) return *this;
 		while (1) {
-			node<T>* _Next_Node = _Node->next;
-			this->remove_node(_Node); _End--;
-			_Node = _Next_Node;
-			Idx += _Jmp;
-			if (!(Idx < _End)) return *this;
-			if (this->size - Idx > _Jmp) {
-				int _Jmp_Cnt = _Jmp;
-				while (_Jmp_Cnt--) _Node = _Node->next;
+			pylist_node<T>* next = node->next_;
+			this->remove_node(node); idx_end--;
+			node = next;
+			idx += distance - 1;
+			if (!(idx < idx_end)) return *this;
+			if (this->size_ - idx > distance - 1) {
+				int distance_cnt = distance - 1;
+				while (distance_cnt--) node = node->next_;
 			}
-			else _Node = this->found_node(Idx);
+			else node = this->found_node(idx);
 		}
 	}
-	template <class T> pylist<T>& pylist<T>::del(const char* _Begin, int _End, int _Jmp) {
-		return this->del(0, _End, _Jmp);
+	template <class T> pylist<T>& pylist<T>::del(const char* start, int end, int distance) {
+		return this->del(0, end, distance);
 	}
-	template <class T> pylist<T>& pylist<T>::del(int _Begin, const char* _End, int _Jmp) {
-		return this->del(_Begin, this->size, _Jmp);
+	template <class T> pylist<T>& pylist<T>::del(int start, const char* end, int distance) {
+		return this->del(start, this->size_, distance);
 	}
-	template <class T> pylist<T>& pylist<T>::del(const char* _Begin, const char* _End, int _Jmp) {
-		return this->del(0, this->size, _Jmp);
+	template <class T> pylist<T>& pylist<T>::del(const char* start, const char* end, int distance) {
+		return this->del(0, this->size_, distance);
 	}
 	template <class T> pylist<T>& pylist<T>::sort() {
-		int _Size = this->size;
-		T* _SortList = (T*)calloc(_Size, sizeof(T) * _Size);
-		for (int _Idx = 0; _Idx < _Size; _Idx++) {
-			_SortList[_Idx] = this->pop(0);
+		int size = this->size_;
+		T* sorted_list = (T*)calloc(size, sizeof(T) * size);
+		for (int idx = 0; idx < size; idx++) {
+			sorted_list[idx] = this->pop(0);
 		}
-		std::sort(_SortList, _SortList + _Size);
-		for (int _Idx = 0; _Idx < _Size; _Idx++) {
-			this->append(_SortList[_Idx]);
+		std::sort(sorted_list, sorted_list + size);
+		for (int idx = 0; idx < size; idx++) {
+			this->append(sorted_list[idx]);
 		}
 		return *this;
 	}
 	template <class T> pylist<T>& pylist<T>::reverse() {
-		pylist<T> _rList;
-		while (this->size) {
-			_rList.append(this->pop());
+		pylist<T> ret_value;
+		while (this->size_) {
+			ret_value.append(this->pop());
 		}
-		return *this = _rList;
+		return *this = ret_value;
 	}
-	template <class T> int pylist<T>::index(T _Val) {
-		int _Idx = 0;
-		node<T>* _Node = this->head;
-		while (_Node != nullptr) {
-			if (_Node->data == _Val) return _Idx;
-			_Node = _Node->next;
-			_Idx++;
+	template <class T> int pylist<T>::index(T value) {
+		int idx = 0;
+		pylist_node<T>* node = this->head_;
+		while (node != nullptr) {
+			if (node->data_ == value) return idx;
+			node = node->next_;
+			idx++;
 		}
-		throw py::c2py("ValueError: value not in list");
+		throw py::to_py("ValueError: value not in list");
 	}
-	template <class T> pylist<T>& pylist<T>::insert(int _Idx, T _Val) {
-		this->set_idx(&_Idx);
-		this->check_idx_out_of_range(_Idx - ((_Idx > 0) ? 1 : 0));
+	template <class T> pylist<T>& pylist<T>::insert(int idx, T value) {
+		this->set_idx(&idx);
+		this->check_idx_out_of_range(idx - ((idx > 0) ? 1 : 0));
 
-		if (_Idx == this->size) {
-			this->append(_Val);
+		if (idx == this->size_) {
+			this->append(value);
 		}
 		else {
-			node<T>* _Node = this->found_node(_Idx);
-			node<T>* _New_Node = this->make_new_node(_Val);
-			_New_Node->next = _Node;
-			_New_Node->prev = _Node->prev;
-			if (_Node->prev != nullptr) _Node->prev->next = _New_Node;
-			else this->head = _New_Node;
-			_Node->prev = _New_Node;
+			pylist_node<T>* node = this->found_node(idx);
+			pylist_node<T>* new_node = this->make_new_node(value);
+			new_node->next_ = node;
+			new_node->prev_ = node->prev_;
+			if (node->prev_ != nullptr) node->prev_->next_ = new_node;
+			else this->head_ = new_node;
+			node->prev_ = new_node;
 		}
 		return *this;
 	}
-	template <class T> pylist<T>& pylist<T>::remove(T _Val) {
-		this->pop(this->index(_Val));
+	template <class T> pylist<T>& pylist<T>::remove(T value) {
+		this->pop(this->index(value));
 		return *this;
 	}
-	template <class T> int pylist<T>::count(T _Val) {
-		int _Cnt = 0;
-		node<T>* _Node = this->head;
-		while (_Node != nullptr) {
-			if (_Node->data == _Val) _Cnt++;
-			_Node = _Node->next;
+	template <class T> int pylist<T>::count(T value) {
+		int count = 0;
+		pylist_node<T>* node = this->head_;
+		while (node != nullptr) {
+			if (node->data_ == value) count++;
+			node = node->next_;
 		}
-		return _Cnt;
+		return count;
 	}
 	template <class T> pylist<T>& pylist<T>::extend(pylist<T> _List) {
-		return this->operator+=(_List);
+		return (*this) += _List;
 	}
-	template <class T> pylist<T> pylist<T>::copy() {
-		pylist<T> _rList = *this;
-		return _rList;
+	template <class T> pylist<T> pylist<T>::copy() const {
+		pylist<T> ret_value = *this;
+		return ret_value;
 	}
 	template <class T> pylist<T>& pylist<T>::clear() {
-		while (this->size) this->pop();
+		while (this->size_) this->pop();
 		return *this;
 	}
 
-	template <class T> T* pylist<T>::operator[](int _Idx) {
-		this->set_idx(&_Idx);
-		this->check_idx_out_of_range(_Idx);
+	template <class T> T* pylist<T>::operator[](int idx) const {
+		this->set_idx(&idx);
+		this->check_idx_out_of_range(idx);
 
-		return &(this->found_node(_Idx)->data);
+		return &(this->found_node(idx)->data_);
 	}
-	template <class T> pylist<T>& pylist<T>::operator=(std::initializer_list<T> _Right) {
+	template <class T> pylist<T>& pylist<T>::operator=(std::initializer_list<T> right) {
 		this->clear();
-		for (T _Ele : _Right) {
-			this->append(_Ele);
+		for (T element : right) {
+			this->append(element);
 		}
 		return *this;
 	}
-	template <class T> pylist<T>& pylist<T>::operator=(const pylist<T>& _Right) {
+	template <class T> pylist<T>& pylist<T>::operator=(const pylist<T>& right) {
 		this->clear();
-		node<T>* _rNode = _Right.head;
-		while(_rNode != nullptr) {
-			this->append(_rNode->data);
-			_rNode = _rNode->next;
+		pylist_node<T>* node = right.head_;
+		while(node != nullptr) {
+			this->append(node->data_);
+			node = node->next_;
 		}
 		return *this;
 	}
-	template <class T> pylist<T>& pylist<T>::operator+=(const pylist<T>& _Right) {
-		pylist<T> _Rcopy = _Right;
-		this->tail->next = _Rcopy.head;
-		_Rcopy.head->prev = this->tail;
-		this->tail = _Rcopy.tail;
-		_Rcopy.head = nullptr; _Rcopy.tail = nullptr;
+	template <class T> pylist<T>& pylist<T>::operator+=(const pylist<T>& right) {
+		pylist<T> temp = right;
+		this->tail_->next_ = temp.head_;
+		temp.head_->prev_ = this->tail_;
+		this->tail_ = temp.tail_;
 
-		this->size += _Rcopy.size;
-		this->flag = true;
-		_Rcopy.size = 0;
+		this->size_ += temp.size_;
+		this->flag_ = true;
+		
+		temp.head_ = nullptr; temp.tail_ = nullptr;
+		temp.size_ = 0;
 		return *this;
 	}
-	template <class T> pylist<T> pylist<T>::operator*(int _Val) {
-		if (_Val <= 0) return {};
-		pylist<T> _rList = *this;
-		int _Rest_Cnt = 0;
-		while (_Val > 1) {
-			_rList += _rList;
-			if (_Val % 2) _Rest_Cnt++;
-			_Val /= 2;
+	template <class T> pylist<T> pylist<T>::operator*(int value) const {
+		if (value <= 0) return {};
+		pylist<T> ret_value = *this;
+		int _Restcount = 0;
+		while (value > 1) {
+			ret_value += ret_value;
+			if (value % 2) _Restcount++;
+			value /= 2;
 		}
-		while (_Rest_Cnt--) _rList += *this;
-		return _rList;
+		while (_Restcount--) ret_value += *this;
+		return ret_value;
 	}
 
-	template <class T> pylist<T> pylist<T>::operator()(int _Begin, int _End, const int _Jmp) {
-		this->set_idx(&_Begin);
-		this->set_idx(&_End);
-		this->check_idx_out_of_range(_Begin);
-		this->check_idx_out_of_range(_End - ((_End > 0) ? 1 : 0));
+	template <class T> pylist<T> pylist<T>::operator()(int start, int end, const int distance) const {
+		this->set_idx(&start);
+		this->set_idx(&end);
+		this->check_idx_out_of_range(start);
+		this->check_idx_out_of_range(end - ((end > 0) ? 1 : 0));
 
-		pylist<T> _rList;
-		int _Lsize = this->size;
-		node<T>* _Node = this->found_node(_Begin);
-		int Idx = _Begin;
-		if (!(Idx < _End)) return _rList;
+		pylist<T> ret_value;
+		int _Lsize = this->size_;
+		pylist_node<T>* node = this->found_node(start);
+		int Idx = start;
+		if (!(Idx < end)) return ret_value;
 		while (1) {
-			_rList.append(_Node->data);
+			ret_value.append(node->data_);
 			
-			Idx += _Jmp;
-			if (!(Idx < _End)) return _rList;
-			if (_Lsize - Idx > _Jmp) {
-				int _Jmp_Cnt = _Jmp;
-				while (_Jmp_Cnt--) _Node = _Node->next;
+			Idx += distance;
+			if (!(Idx < end)) return ret_value;
+			if (_Lsize - Idx > distance) {
+				int distancecount = distance;
+				while (distancecount--) node = node->next_;
 			}
-			else _Node = this->found_node(Idx);
+			else node = this->found_node(Idx);
 		}
 	}
-	template <class T> pylist<T> pylist<T>::operator()(const char* _Begin, int _End, const int _Jmp) {
-		return this->operator()(0, _End, _Jmp);
+	template <class T> pylist<T> pylist<T>::operator()(const char* start, int end, const int distance) const {
+		return this->operator()(0, end, distance);
 	}
-	template <class T> pylist<T> pylist<T>::operator()(int _Begin, const char* _End, const int _Jmp) {
-		return this->operator()(_Begin, this->size, _Jmp);
+	template <class T> pylist<T> pylist<T>::operator()(int start, const char* end, const int distance) const {
+		return this->operator()(start, this->size_, distance);
 	}
-	template <class T> pylist<T> pylist<T>::operator()(const char* _Begin, const char* _End, const int _Jmp) {
-		return this->operator()(0, this->size, _Jmp);
+	template <class T> pylist<T> pylist<T>::operator()(const char* start, const char* end, const int distance) const {
+		return this->operator()(0, this->size_, distance);
+	}
+
+	template <class T> int len(const pylist<T> value) {
+		return value.size_;
 	}
 }
 #endif
