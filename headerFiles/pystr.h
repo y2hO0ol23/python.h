@@ -7,9 +7,10 @@
 
 namespace py {
 	class pystr;
-	using cINT = const int;
-	using cCHAR = const char;
-	using cPYSTR = const pystr;
+	using cINT		= const int;
+	using cCHAR		= const char;
+	using cWCHAR	= const wchar_t;
+	using cPYSTR	= const pystr;
 
 	cINT len(cPYSTR& ps);
 	cINT ord(cPYSTR& ps);
@@ -75,14 +76,14 @@ namespace py {
 		pystr();
 		pystr(cCHAR* char_ptr);
 		pystr(cCHAR character);
-		pystr(const wchar_t* wchar_ptr);
-		pystr(const wchar_t wchar);
+		pystr(cWCHAR* wchar_ptr);
+		pystr(cWCHAR wchar);
 		pystr(cINT unicode);
 		pystr(cPYSTR& py_str);
 		~pystr();
 
-		const wchar_t* begin() const;
-		const wchar_t* end() const;
+		cWCHAR* begin() const;
+		cWCHAR* end() const;
 		char* c_str() const;
 
 		pystr capitalize() const;
@@ -95,7 +96,7 @@ namespace py {
 		pystr expandtabs(cINT tabsize = 8) const;
 		int find(cPYSTR& value, cINT start, cINT end) const;
 		int find(cPYSTR& value, cINT start = 0) const;
-		int index(cPYSTR& value, cINT start, int end) const;
+		int index(cPYSTR& value, cINT start, cINT end) const;
 		int index(cPYSTR& value, cINT start = 0) const;
 		bool isalnum() const;
 		bool isalpha() const;
@@ -117,7 +118,7 @@ namespace py {
 		/**/
 		py::pylist<pystr> partition(cPYSTR& value) const;
 		pystr replace(cPYSTR& oldvalue, cPYSTR& newvalue) const;
-		pystr replace(cPYSTR& oldvalue, cPYSTR& newvalue, int count) const;
+		pystr replace(cPYSTR& oldvalue, cPYSTR& newvalue, cINT count) const;
 		int rfind(cPYSTR& value, cINT start, cINT end) const;
 		int rfind(cPYSTR& value, cINT start = 0) const;
 		int rindex(cPYSTR& value, cINT start = 0) const;
@@ -146,8 +147,8 @@ namespace py {
 		pystr& operator=(cPYSTR& right);
 		pystr& operator=(cCHAR* right);
 		pystr& operator=(cCHAR right);
-		pystr& operator=(const wchar_t* right);
-		pystr& operator=(const wchar_t right);
+		pystr& operator=(cWCHAR* right);
+		pystr& operator=(cWCHAR right);
 		pystr& operator+=(cPYSTR& right);
 	};
 	void pystr::SetupVolume(cINT size) {
@@ -276,10 +277,10 @@ namespace py {
 	pystr::pystr(cCHAR character) {
 		this->operator=(character);
 	}
-	pystr::pystr(const wchar_t* wchar_ptr) {
+	pystr::pystr(cWCHAR* wchar_ptr) {
 		this->operator=(wchar_ptr);
 	}
-	pystr::pystr(const wchar_t wchar) {
+	pystr::pystr(cWCHAR wchar) {
 		this->operator=(wchar);
 	}
 	pystr::pystr(cINT unicode) {
@@ -302,10 +303,10 @@ namespace py {
 		free(this->data_);
 	}
 
-	const wchar_t* pystr::begin() const {
+	cWCHAR* pystr::begin() const {
 		return this->data_;
 	}
-	const wchar_t* pystr::end() const {
+	cWCHAR* pystr::end() const {
 		return (this->data_) + this->length_;
 	}
 	char* pystr::c_str() const {
@@ -694,7 +695,7 @@ namespace py {
 		char char2pystr[2] = { right, '\0' };
 		return this->operator=(char2pystr);
 	}
-	pystr& pystr::operator=(const wchar_t* right) {
+	pystr& pystr::operator=(cWCHAR* right) {
 		int idx = 0;
 		int null_idx = this->length_ + wcslen(right);
 		while (this->isIdxOver(null_idx)) this->ExtendVolume();
@@ -703,7 +704,7 @@ namespace py {
 		this->length_ = null_idx;
 		return *this;
 	}
-	pystr& pystr::operator=(const wchar_t right) {
+	pystr& pystr::operator=(cWCHAR right) {
 		while (this->isIdxOver(0)) this->ExtendVolume();
 		this->data_[0] = right;
 		this->data_[1] = '\0';
