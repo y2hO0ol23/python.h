@@ -11,8 +11,11 @@ int main() {
 
 	cout << endl << "output"p.center(40, "=") << endl; //function center
 	printf("printf(\"%%s\",pystr.c_str()) :             %s\n", str.c_str());
-	cout << "for (auto i : pystr) cout << i << endl : ";
-	for (auto i : str) cout << i << ",";
+	cout << "for (auto i : pystr) cout << chr(i) << \",\" : ";
+	for (auto i : str) cout << chr(i) << ",";
+	cout << endl;
+	cout << "for (pystr i : pystr) cout << i << \",\" : ";
+	for (pystr i : str) cout << i << ",";
 	cout << endl;
 
 	cout << endl << "\"function\"p.center(40,\"=\") : " << "function"p.center(40, "=") << endl;
