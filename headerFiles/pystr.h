@@ -14,7 +14,6 @@ namespace py {
 
 	std::ostream& operator<<(std::ostream& os, const pystr& value);
 	std::istream& operator>>(std::istream& is, pystr& value);
-	pystr operator ""p(const char* char_ptr, size_t len);
 	pystr operator+(const pystr& left, const pystr& right);
 	bool operator==(const pystr& left, const pystr& right);
 	bool operator!=(const pystr& left, const pystr& right);
@@ -23,10 +22,11 @@ namespace py {
 	bool operator>(const pystr& left, const pystr& right);
 	bool operator>=(const pystr& left, const pystr& right);
 	pystr operator*(const pystr& left, const int count);
-	
-	class pystr {
 #pragma warning(push)
 #pragma warning(disable:4455)
+	pystr operator ""p(const char* char_ptr, size_t len);
+	
+	class pystr {
 		friend pystr operator""p(const char* char_ptr, size_t len);
 #pragma warning(pop)
 		friend std::ostream& operator<<(std::ostream& os, const pystr& value);
