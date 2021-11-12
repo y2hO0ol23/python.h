@@ -7,54 +7,58 @@
 
 namespace py {
 	class pystr;
-	const int len(const pystr& ps);
-	const int ord(const pystr& ps);
-	const pystr chr(const int& unicode);
-	const pystr str(const double& number);
+	using cINT = const int;
+	using cCHAR = const char;
+	using cPYSTR = const pystr;
 
-	std::ostream& operator<<(std::ostream& os, const pystr& value);
+	cINT len(cPYSTR& ps);
+	cINT ord(cPYSTR& ps);
+	cPYSTR chr(cINT& unicode);
+	cPYSTR str(const double& number);
+
+	std::ostream& operator<<(std::ostream& os, cPYSTR& value);
 	std::istream& operator>>(std::istream& is, pystr& value);
-	pystr operator+(const pystr& left, const pystr& right);
-	bool operator==(const pystr& left, const pystr& right);
-	bool operator!=(const pystr& left, const pystr& right);
-	bool operator<(const pystr& left, const pystr& right);
-	bool operator<=(const pystr& left, const pystr& right);
-	bool operator>(const pystr& left, const pystr& right);
-	bool operator>=(const pystr& left, const pystr& right);
-	pystr operator*(const pystr& left, const int count);
+	pystr operator+(cPYSTR& left, cPYSTR& right);
+	bool operator==(cPYSTR& left, cPYSTR& right);
+	bool operator!=(cPYSTR& left, cPYSTR& right);
+	bool operator<(cPYSTR& left, cPYSTR& right);
+	bool operator<=(cPYSTR& left, cPYSTR& right);
+	bool operator>(cPYSTR& left, cPYSTR& right);
+	bool operator>=(cPYSTR& left, cPYSTR& right);
+	pystr operator*(cPYSTR& left, cINT count);
 #pragma warning(push)
 #pragma warning(disable:4455)
-	pystr operator ""p(const char* char_ptr, size_t len);
+	pystr operator ""p(cCHAR* char_ptr, size_t len);
 	
 	class pystr {
-		friend pystr operator""p(const char* char_ptr, size_t len);
+		friend pystr operator""p(cCHAR* char_ptr, size_t len);
 #pragma warning(pop)
-		friend std::ostream& operator<<(std::ostream& os, const pystr& value);
+		friend std::ostream& operator<<(std::ostream& os, cPYSTR& value);
 		friend std::istream& operator>>(std::istream& is, pystr& value);
-		friend pystr operator+(const pystr& left, const pystr& right);
-		friend bool operator==(const pystr& left, const pystr& right);
-		friend bool operator!=(const pystr& left, const pystr& right);
-		friend bool operator<(const pystr& left, const pystr& right);
-		friend bool operator<=(const pystr& left, const pystr& right);
-		friend bool operator>(const pystr& left, const pystr& right);
-		friend bool operator>=(const pystr& left, const pystr& right);
-		friend pystr operator*(const pystr& left, int count);
-		friend const int len(const pystr& ps);
-		friend const int ord(const pystr& ps);
+		friend pystr operator+(cPYSTR& left, cPYSTR& right);
+		friend bool operator==(cPYSTR& left, cPYSTR& right);
+		friend bool operator!=(cPYSTR& left, cPYSTR& right);
+		friend bool operator<(cPYSTR& left, cPYSTR& right);
+		friend bool operator<=(cPYSTR& left, cPYSTR& right);
+		friend bool operator>(cPYSTR& left, cPYSTR& right);
+		friend bool operator>=(cPYSTR& left, cPYSTR& right);
+		friend pystr operator*(cPYSTR& left, cINT count);
+		friend cINT len(cPYSTR& ps);
+		friend cINT ord(cPYSTR& ps);
 	private:
 		int length_ = 0;
 		int volume_ = 0;
 		wchar_t* data_;
 
-		void SetupVolume(const int size);
+		void SetupVolume(cINT size);
 		void ExtendVolume();
-		void SetVolume(const int size);
+		void SetVolume(cINT size);
 		void SetIdx(int* idx) const;
 		void SetResizedIdx(int* idx) const;
-		void isIdxOutOfRange(const int idx) const;
+		void isIdxOutOfRange(cINT idx) const;
 		bool isIdxOver(int idx) const;
 		char* Data2CharPtr() const;
-		pystr& CharPtr2Data(const char* char_ptr);
+		pystr& CharPtr2Data(cCHAR* char_ptr);
 
 		pystr lowerChar() const;
 		pystr upperChar() const;
@@ -69,12 +73,12 @@ namespace py {
 		bool isCharSpace() const;
 	public:
 		pystr();
-		pystr(const char* char_ptr);
-		pystr(const char character);
+		pystr(cCHAR* char_ptr);
+		pystr(cCHAR character);
 		pystr(const wchar_t* wchar_ptr);
 		pystr(const wchar_t wchar);
-		pystr(const int unicode);
-		pystr(const pystr& py_str);
+		pystr(cINT unicode);
+		pystr(cPYSTR& py_str);
 		~pystr();
 
 		const wchar_t* begin() const;
@@ -83,16 +87,16 @@ namespace py {
 
 		pystr capitalize() const;
 		pystr casefold() const;
-		pystr center(const int length, const pystr& character = " "p) const;
-		int count(const pystr& value, const int start = 0) const;
-		int count(const pystr& value, const int start, const int end) const;
-		bool endswith(const pystr& value, const int start = 0) const;
-		bool endswith(const pystr& value, const int start, const int end) const;
-		pystr expandtabs(const int tabsize = 8) const;
-		int find(const pystr& value, const int start, const int end) const;
-		int find(const pystr& value, const int start = 0) const;
-		int index(const pystr& value, const int start, int end) const;
-		int index(const pystr& value, const int start = 0) const;
+		pystr center(cINT length, cPYSTR& character = " "p) const;
+		int count(cPYSTR& value, cINT start = 0) const;
+		int count(cPYSTR& value, cINT start, cINT end) const;
+		bool endswith(cPYSTR& value, cINT start = 0) const;
+		bool endswith(cPYSTR& value, cINT start, cINT end) const;
+		pystr expandtabs(cINT tabsize = 8) const;
+		int find(cPYSTR& value, cINT start, cINT end) const;
+		int find(cPYSTR& value, cINT start = 0) const;
+		int index(cPYSTR& value, cINT start, int end) const;
+		int index(cPYSTR& value, cINT start = 0) const;
 		bool isalnum() const;
 		bool isalpha() const;
 		bool isAscii() const;
@@ -104,49 +108,49 @@ namespace py {
 		bool isspace() const;
 		bool istitle() const;
 		bool isupper() const;
-		pystr join(const pystr& iterable) const;
+		pystr join(cPYSTR& iterable) const;
 		pystr join(py::pylist<pystr> iterable) const;
-		pystr ljust(const int length, const pystr& character = " "p) const;
+		pystr ljust(cINT length, cPYSTR& character = " "p) const;
 		pystr lower() const;
 		pystr lstrip() const;
-		//pystr maketrance(const pystr& _Tstr, const pystr& _VStr, const pystr& _RStr = "");
+		//pystr maketrance(cPYSTR& _Tstr, cPYSTR& _VStr, cPYSTR& _RStr = "");
 		/**/
-		py::pylist<pystr> partition(const pystr& value) const;
-		pystr replace(const pystr& oldvalue, const pystr& newvalue) const;
-		pystr replace(const pystr& oldvalue, const pystr& newvalue, int count) const;
-		int rfind(const pystr& value, const int start, const int end) const;
-		int rfind(const pystr& value, const int start = 0) const;
-		int rindex(const pystr& value, const int start = 0) const;
-		int rindex(const pystr& value, const int start, const int end) const;
-		pystr rjust(const int length, const pystr& character = " "p) const;
-		py::pylist<pystr> rpartition(const pystr& value) const;
+		py::pylist<pystr> partition(cPYSTR& value) const;
+		pystr replace(cPYSTR& oldvalue, cPYSTR& newvalue) const;
+		pystr replace(cPYSTR& oldvalue, cPYSTR& newvalue, int count) const;
+		int rfind(cPYSTR& value, cINT start, cINT end) const;
+		int rfind(cPYSTR& value, cINT start = 0) const;
+		int rindex(cPYSTR& value, cINT start = 0) const;
+		int rindex(cPYSTR& value, cINT start, cINT end) const;
+		pystr rjust(cINT length, cPYSTR& character = " "p) const;
+		py::pylist<pystr> rpartition(cPYSTR& value) const;
 		pystr rstrip() const;
-		py::pylist<pystr> split(const pystr& separator = " "p) const;
-		py::pylist<pystr> split(const pystr& separator, const int maxsplit) const;
+		py::pylist<pystr> split(cPYSTR& separator = " "p) const;
+		py::pylist<pystr> split(cPYSTR& separator, cINT maxsplit) const;
 		py::pylist<pystr> splitlines(const bool keeplinebreaks = false) const;
-		bool startwith(const pystr& value, const int start = 0) const;
-		bool startwith(const pystr& value, const int start, const int end) const;
+		bool startwith(cPYSTR& value, cINT start = 0) const;
+		bool startwith(cPYSTR& value, cINT start, cINT end) const;
 		pystr strip() const;
 		pystr swapcase() const;
 		pystr title() const;
 		//pystr translate(std::map<pystr,pystr> _Dict);
 		/**/
 		pystr upper() const;
-		pystr zfill(const int len) const;
+		pystr zfill(cINT len) const;
 
-		pystr operator[](const int index) const;
-		pystr operator()(const int start, const int end, const int distance = 1) const;
-		pystr operator()(const char* start, const int end, const int distance = 1) const;
-		pystr operator()(const int start, const char* end, const int distance = 1) const;
-		pystr operator()(const char* start, const char* end, const int distance = 1) const;
-		pystr& operator=(const pystr& right);
-		pystr& operator=(const char* right);
-		pystr& operator=(const char right);
+		pystr operator[](cINT index) const;
+		pystr operator()(cINT start, cINT end, cINT distance = 1) const;
+		pystr operator()(cCHAR* start, cINT end, cINT distance = 1) const;
+		pystr operator()(cINT start, cCHAR* end, cINT distance = 1) const;
+		pystr operator()(cCHAR* start, cCHAR* end, cINT distance = 1) const;
+		pystr& operator=(cPYSTR& right);
+		pystr& operator=(cCHAR* right);
+		pystr& operator=(cCHAR right);
 		pystr& operator=(const wchar_t* right);
 		pystr& operator=(const wchar_t right);
-		pystr& operator+=(const pystr& right);
+		pystr& operator+=(cPYSTR& right);
 	};
-	void pystr::SetupVolume(const int size) {
+	void pystr::SetupVolume(cINT size) {
 		if (this->volume_ == 0) {
 			this->data_ = (wchar_t*)calloc(size, sizeof(wchar_t) * size);
 			this->volume_ = size;
@@ -156,7 +160,7 @@ namespace py {
 		if (this->volume_ == 0) this->SetupVolume(1);
 		else this->SetVolume(this->volume_ * 2);
 	}
-	void pystr::SetVolume(const int size) {
+	void pystr::SetVolume(cINT size) {
 		if (this->volume_ == 0) {
 			this->SetupVolume(size);
 			return;
@@ -180,7 +184,7 @@ namespace py {
 		int len = this->length_;
 		if (*idx >= len) *idx = len;
 	}
-	void pystr::isIdxOutOfRange(const int idx) const {
+	void pystr::isIdxOutOfRange(cINT idx) const {
 		if (idx < 0 || this->length_ <= idx) throw "IndexError: string index out of range"p;
 	}
 	bool pystr::isIdxOver(int idx) const {
@@ -194,7 +198,7 @@ namespace py {
 		WideCharToMultiByte(CP_ACP, 0, data, -1, char_ptr, multi_byte_len, NULL, NULL);
 		return char_ptr;
 	}
-	pystr& pystr::CharPtr2Data(const char *char_ptr) {
+	pystr& pystr::CharPtr2Data(cCHAR *char_ptr) {
 		int wide_char_len = MultiByteToWideChar(CP_ACP, 0, char_ptr, strlen(char_ptr), NULL, NULL);
 		this->SetVolume(wide_char_len + 1);
 		MultiByteToWideChar(CP_ACP, 0, char_ptr, strlen(char_ptr), this->data_, wide_char_len);
@@ -266,10 +270,10 @@ namespace py {
 	pystr::pystr() {
 		this->operator=("");
 	}
-	pystr::pystr(const char* char_ptr) {
+	pystr::pystr(cCHAR* char_ptr) {
 		this->operator=(char_ptr);
 	}
-	pystr::pystr(const char character) {
+	pystr::pystr(cCHAR character) {
 		this->operator=(character);
 	}
 	pystr::pystr(const wchar_t* wchar_ptr) {
@@ -278,10 +282,10 @@ namespace py {
 	pystr::pystr(const wchar_t wchar) {
 		this->operator=(wchar);
 	}
-	pystr::pystr(const int unicode) {
+	pystr::pystr(cINT unicode) {
 		this->operator=(chr(unicode));
 	}
-	pystr::pystr(const pystr& ps) {
+	pystr::pystr(cPYSTR& ps) {
 		//same as pystr::operator=(str)
 		int null_idx = ps.length_;
 		for (int idx = 0;
@@ -319,7 +323,7 @@ namespace py {
 		}
 		return ret_value;
 	}
-	pystr pystr::center(const int length, const pystr& character) const {
+	pystr pystr::center(cINT length, cPYSTR& character) const {
 		if (character.length_ != 1) throw "TypeError: The fill character must be exactly one character long"p;
 		int len = this->length_;
 		pystr ret_value = (character * (((length + 1) / 2) - ((len + 1) / 2))) + *this;
@@ -327,10 +331,10 @@ namespace py {
 		ret_value += character * (length - ret_value.length_);
 		return ret_value;
 	}
-	int pystr::count(const pystr& value, const int start) const {
+	int pystr::count(cPYSTR& value, cINT start) const {
 		return this->count(value, start, this->length_);
 	}
-	int pystr::count(const pystr& value, const int start, const int end) const {
+	int pystr::count(cPYSTR& value, cINT start, cINT end) const {
 		int count = 0;
 		pystr target = (*this)(start, end);
 		int value_len = value.length_;
@@ -342,28 +346,28 @@ namespace py {
 			target = target(idx + value_len, "");
 		}
 	}
-	bool pystr::endswith(const pystr& value, const int start) const {
+	bool pystr::endswith(cPYSTR& value, cINT start) const {
 		return this->endswith(value, start, this->length_);
 	}
-	bool pystr::endswith(const pystr& value, const int start, const int end) const {
+	bool pystr::endswith(cPYSTR& value, cINT start, cINT end) const {
 		return (*this)[end - 1] == value;
 	}
-	pystr pystr::expandtabs(const int tabsize) const {
+	pystr pystr::expandtabs(cINT tabsize) const {
 		return this->replace("\t", " "p * (tabsize - (tabsize > 1) ? 1 : 0));
 	}
-	int pystr::find(const pystr& value, const int start) const {
+	int pystr::find(cPYSTR& value, cINT start) const {
 		return this->find(value, start, this->length_);
 	}
-	int pystr::find(const pystr& value, const int start, const int end) const {
+	int pystr::find(cPYSTR& value, cINT start, cINT end) const {
 		pystr target = (*this)(start, end);
 		wchar_t* char_ptr = wcsstr(target.data_, value.data_);
 		if (char_ptr == nullptr) return -1;
 		return (char_ptr - target.data_) + start;
 	}
-	int pystr::index(const pystr& value, const int start) const {
+	int pystr::index(cPYSTR& value, cINT start) const {
 		return this->index(value, start, this->length_);
 	}
-	int pystr::index(const pystr& value, const int start, const int end) const {
+	int pystr::index(cPYSTR& value, cINT start, cINT end) const {
 		int idx = this->find(value, start, end);
 		if (idx == -1) throw "ValueError: substring not found"p;
 		return idx;
@@ -449,7 +453,7 @@ namespace py {
 	bool pystr::isupper() const {
 		return *this == this->upper();
 	}
-	pystr pystr::join(const pystr& iterable) const {
+	pystr pystr::join(cPYSTR& iterable) const {
 		int len = iterable.length_;
 		pystr ret_value = iterable[0];
 		if (len == 0) return ret_value;
@@ -470,7 +474,7 @@ namespace py {
 		}
 		return ret_value;
 	}
-	pystr pystr::ljust(const int length, const pystr& character) const {
+	pystr pystr::ljust(cINT length, cPYSTR& character) const {
 		if (character.length_ != 1) throw "TypeError: The fill character must be exactly one character long"p;
 		return this->data_ + character * (length - this->length_);
 	}
@@ -489,17 +493,17 @@ namespace py {
 		if (idx == len) return "";
 		return this->operator()(idx, "");
 	}
-	//std::map<int, int> pystr::maketrance(const pystr& _Tstr, const pystr& _VStr, const pystr& _RStr);
+	//std::map<int, int> pystr::maketrance(cPYSTR& _Tstr, cPYSTR& _VStr, cPYSTR& _RStr);
 	/**/
-	py::pylist<pystr> pystr::partition(const pystr& value) const {
+	py::pylist<pystr> pystr::partition(cPYSTR& value) const {
 		int idx = this->find(value);
 		if (idx == -1) idx = this->length_;
 		return { (*this)("",idx), value, (*this)(idx + value.length_,"") };
 	}
-	pystr pystr::replace(const pystr& oldvalue, const pystr& newvalue) const {
+	pystr pystr::replace(cPYSTR& oldvalue, cPYSTR& newvalue) const {
 		return this->replace(oldvalue, newvalue, this->length_);
 	}
-	pystr pystr::replace(const pystr& oldvalue, const pystr& newvalue, const int count) const {
+	pystr pystr::replace(cPYSTR& oldvalue, cPYSTR& newvalue, cINT count) const {
 		pystr ret_value;
 		pystr target = *this;
 		int oldvalue_len = oldvalue.length_;
@@ -513,10 +517,10 @@ namespace py {
 			cnt--;
 		}
 	}
-	int pystr::rfind(const pystr& _Str, const int start) const {
+	int pystr::rfind(cPYSTR& _Str, cINT start) const {
 		return this->rfind(_Str, start, this->length_);
 	}
-	int pystr::rfind(const pystr& value, const int start, const int end) const {
+	int pystr::rfind(cPYSTR& value, cINT start, cINT end) const {
 		//kmp algorithm
 		int value_len = value.length_, j = 0;
 		py::pylist<int> kmp_pi(value_len, 0); //get pi array
@@ -538,19 +542,19 @@ namespace py {
 		}
 		return -1;
 	}
-	int pystr::rindex(const pystr& value, const int start) const {
+	int pystr::rindex(cPYSTR& value, cINT start) const {
 		return this->rindex(value, start, this->length_);
 	}
-	int pystr::rindex(const pystr& value, const int start, const int end) const {
+	int pystr::rindex(cPYSTR& value, cINT start, cINT end) const {
 		int idx = this->rfind(value, start, end);
 		if (idx == -1) throw "ValueError: substring not found"p;
 		return idx;
 	}
-	pystr pystr::rjust(const int length, const pystr& character) const {
+	pystr pystr::rjust(cINT length, cPYSTR& character) const {
 		if (character.length_ != 1) throw "TypeError: The fill character must be exactly one character long"p;
 		return character * (length - this->length_) + this->data_;
 	}
-	py::pylist<pystr> pystr::rpartition(const pystr& value) const {
+	py::pylist<pystr> pystr::rpartition(cPYSTR& value) const {
 		int idx = this->rfind(value);
 		if (idx == -1) idx = this->length_;
 		return { (*this)("",idx), value, (*this)(idx + value.length_,"") };
@@ -562,10 +566,10 @@ namespace py {
 		if (idx == 0) return "";
 		return (*this)(0, idx);
 	}
-	py::pylist<pystr> pystr::split(const pystr& separator) const {
+	py::pylist<pystr> pystr::split(cPYSTR& separator) const {
 		return this->split(separator, this->length_);
 	}
-	py::pylist<pystr> pystr::split(const pystr& separator, const int maxsplit) const {
+	py::pylist<pystr> pystr::split(cPYSTR& separator, cINT maxsplit) const {
 		py::pylist<pystr> ret_value;
 		pystr target = *this;
 		int separator_len = separator.length_;
@@ -587,10 +591,10 @@ namespace py {
 		else						ret_value = this->replace('\n', "@\n");
 		return ret_value.split("@\n");
 	}
-	bool pystr::startwith(const pystr& value, const int start) const {
+	bool pystr::startwith(cPYSTR& value, cINT start) const {
 		return this->startwith(value, start, this->length_);
 	}
-	bool pystr::startwith(const pystr& value, const int start, const int end) const {
+	bool pystr::startwith(cPYSTR& value, cINT start, cINT end) const {
 		return (*this)[start] == value;
 	}
 	pystr pystr::strip() const {
@@ -640,17 +644,17 @@ namespace py {
 		}
 		return ret_value;
 	}
-	pystr pystr::zfill(const int len) const {
+	pystr pystr::zfill(cINT len) const {
 		return this->rjust(len, "0");
 	}
 
-	pystr pystr::operator[](const int index) const {
+	pystr pystr::operator[](cINT index) const {
 		int idx = index;
 		this->SetIdx(&idx);
 		this->isIdxOutOfRange(idx);
 		return this->data_[idx];
 	};
-	pystr pystr::operator()(const int start, const int end, const int distance) const {
+	pystr pystr::operator()(cINT start, cINT end, cINT distance) const {
 		int idx = start;
 		int _end = end;
 		this->SetResizedIdx(&idx);
@@ -663,19 +667,19 @@ namespace py {
 		}
 		return ret_value;
 	};
-	pystr pystr::operator()(const char* start, const int end, const int distance) const {
+	pystr pystr::operator()(cCHAR* start, cINT end, cINT distance) const {
 		return (*this)(0, end, distance);
 	}
-	pystr pystr::operator()(const int start, const char* end, const int distance) const {
+	pystr pystr::operator()(cINT start, cCHAR* end, cINT distance) const {
 		return (*this)(start, this->length_, distance);
 	}
-	pystr pystr::operator()(const char* start, const char* end, const int distance) const {
+	pystr pystr::operator()(cCHAR* start, cCHAR* end, cINT distance) const {
 		return (*this)(0, this->length_, distance);
 	}
 
 #pragma warning(push)
 #pragma warning(disable: 4996)
-	pystr& pystr::operator=(const pystr& right) {
+	pystr& pystr::operator=(cPYSTR& right) {
 		int null_idx = right.length_;
 		while (this->isIdxOver(null_idx)) this->ExtendVolume();
 		wcscpy(this->data_, right.data_);
@@ -683,10 +687,10 @@ namespace py {
 		this->length_ = null_idx;
 		return *this;
 	}
-	pystr& pystr::operator=(const char* right) {
+	pystr& pystr::operator=(cCHAR* right) {
 		return this->CharPtr2Data(right);
 	}
-	pystr& pystr::operator=(const char right) {
+	pystr& pystr::operator=(cCHAR right) {
 		char char2pystr[2] = { right, '\0' };
 		return this->operator=(char2pystr);
 	}
@@ -706,7 +710,7 @@ namespace py {
 		this->length_ = 1;
 		return *this;
 	}
-	pystr& pystr::operator+=(const pystr& right) {
+	pystr& pystr::operator+=(cPYSTR& right) {
 		int null_idx = this->length_ + right.length_;
 		while (this->isIdxOver(null_idx)) this->ExtendVolume();
 		wcscat(this->data_, right.data_);
@@ -716,7 +720,7 @@ namespace py {
 	}
 #pragma warning(pop)
 
-	std::ostream& operator<<(std::ostream& os, const pystr& value) {
+	std::ostream& operator<<(std::ostream& os, cPYSTR& value) {
 		os << value.Data2CharPtr();
 		return os;
 	}
@@ -749,34 +753,34 @@ namespace py {
 	}
 #pragma warning(push)
 #pragma warning(disable:4455)
-	pystr operator ""p(const char* char_ptr, size_t len) {
+	pystr operator ""p(cCHAR* char_ptr, size_t len) {
 		pystr ret_value = char_ptr;
 		return ret_value;
 	}
 #pragma warning(pop)
-	pystr operator+(const pystr& left, const pystr& right) {
+	pystr operator+(cPYSTR& left, cPYSTR& right) {
 		pystr ret_value = left;
 		return ret_value += right;
 	}
-	bool operator==(const pystr& left, const pystr& right) {
+	bool operator==(cPYSTR& left, cPYSTR& right) {
 		return !wcscmp(left.data_, right.data_);
 	}
-	bool operator!=(const pystr& left, const pystr& right) {
+	bool operator!=(cPYSTR& left, cPYSTR& right) {
 		return wcscmp(left.data_, right.data_);
 	}
-	bool operator<(const pystr& left, const pystr& right) {
+	bool operator<(cPYSTR& left, cPYSTR& right) {
 		return wcscmp(left.data_, right.data_) < 0;
 	}
-	bool operator<=(const pystr& left, const pystr& right) {
+	bool operator<=(cPYSTR& left, cPYSTR& right) {
 		return wcscmp(left.data_, right.data_) <= 0;
 	}
-	bool operator>(const pystr& left, const pystr& right) {
+	bool operator>(cPYSTR& left, cPYSTR& right) {
 		return wcscmp(left.data_, right.data_) > 0;
 	}
-	bool operator>=(const pystr& left, const pystr& right) {
+	bool operator>=(cPYSTR& left, cPYSTR& right) {
 		return wcscmp(left.data_, right.data_) >= 0;
 	}
-	pystr operator*(const pystr& left, const int count) {
+	pystr operator*(cPYSTR& left, cINT count) {
 		if (count <= 0) return ""p;
 		if (count == 1) return left;
 		return left * (count / 2) + left * (count / 2) + left * (count % 2);
@@ -784,18 +788,18 @@ namespace py {
 
 #pragma warning(push)
 #pragma warning(disable: 4244)
-	const int len(const pystr& ps) {
+	cINT len(cPYSTR& ps) {
 		return ps.length_;
 	}
-	const int ord(const pystr& ps) {
+	cINT ord(cPYSTR& ps) {
 		if (len(ps) > 1) throw "ord() expected a character, but string of length "p + str(len(ps)) + " found"p;
 		return (int)(ps.data_[0]);
 	}
-	const pystr chr(const int& unicode) {
+	cPYSTR chr(cINT& unicode) {
 		if (!(0 <= unicode && unicode <= 0x10FFFF)) throw "chr() arg not in range("p + str(unicode) + ")"p;
 		return (wchar_t)unicode;
 	}
-	const pystr str(const double& number) {
+	cPYSTR str(const double& number) {
 		pystr py_str;
 		int int_value = (number + 0.00000000005);
 		double decimal_value = (number + 0.00000000005) - int_value;
@@ -815,7 +819,7 @@ namespace py {
 		}
 		return py_str;
 	}
-	const pystr to_py(const pystr& ps) {
+	cPYSTR to_py(cPYSTR& ps) {
 		return ps;
 	}
 #pragma warning(pop)
