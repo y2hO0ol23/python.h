@@ -11,11 +11,8 @@ int main() {
 
 	cout << endl << "output"p.center(40, "=") << endl; //function center
 	printf("printf(\"%%s\",pystr.c_str()) :             %s\n", str.c_str());
-	cout << "for (auto i : pystr) cout << chr(i) << \",\" : ";
-	for (auto i : str) cout << chr(i) << ",";
-	cout << endl;
-	cout << "for (pystr i : pystr) cout << i << \",\" : ";
-	for (pystr i : str) cout << i << ",";
+	cout << "for (auto i : pystr) cout << i << endl : ";
+	for (auto i : str) cout << i << ",";
 	cout << endl;
 
 	cout << endl << "\"function\"p.center(40,\"=\") : " << "function"p.center(40, "=") << endl;
@@ -65,6 +62,7 @@ int main() {
 	cout << "pystr.zfill(30) : "p.ljust(32) << str.zfill(30) << endl;
 
 	cout << "len(pystr) : "p.ljust(32) << len(str) << endl;
+	cout << "pystr.in_('i')"p.ljust(32) << str.in_('i') << endl;
 	cout << "ord(\"1\") : "p.ljust(32) << ord("1") << endl;
 	cout << "chr(49) : "p.ljust(32) << chr(49) << endl;
 	cout << "str(49) : "p.ljust(32) << py::str(49) << endl;
@@ -97,13 +95,13 @@ int main() {
 	cout << "list1 = " << list1 << endl
 		<< "list2 = " << list2 << endl
 		<< "list3 = " << list3 << endl;
-	cout << "list1 += list2 + list3 : " << (list1 += list2 + list3) << endl;
-	cout << "list1 : " << list1 << endl;
+	cout << "list1 += list2 + list3 : "p.ljust(32) << (list1 += list2 + list3) << endl;
+	cout << "list1 : "p.ljust(32) << list1 << endl;
 	cout << "for (auto ele : list1) cout << ele : "p.ljust(32);
 	for (auto ele : list1) cout << ele;
 	cout << endl;
 	cout << "pylist : "p.ljust(32) << list1 << " // (list1)" << endl;
-	cout << "pylist.len() : "p.ljust(32) << list1.len() << endl;
+	cout << "len(pylist) : "p.ljust(32) << len(list1) << endl;
 	cout << "pylist.append(7) : "p.ljust(32) << list1.append(7) << endl;
 	cout << "pylist.pop(3) : "p.ljust(32) << list1.pop(3) << endl;
 	cout << "pylist : "p.ljust(32) << list1 << endl;
