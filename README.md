@@ -23,5 +23,5 @@ Project that move python to c++.
 <ul>
   <li>pystr // Need pydict.</li>
   <li>pylist // All done.</li>
-  <li><s>pydict<s> // use std::map</li>
+  <li><s>pydict</s> // use std::map</li>
 <ul>
