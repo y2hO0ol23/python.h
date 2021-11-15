@@ -3,10 +3,16 @@
 #define _PYTHONSTRNG_
 #include <iostream>
 #include <windows.h>
+#include <sstream>
+#include <stdarg.h> 
+
+#include <map>
 #include "pylist.h"
 
 namespace py {
 	class pystr;
+
+	using std::map;
 
 	using cINT		= const int;
 	using cCHAR		= const char;
@@ -16,7 +22,7 @@ namespace py {
 	int len(cPYSTR& ps);
 	int ord(cPYSTR& ps);
 	pystr chr(cINT& unicode);
-	pystr str(const double& number);
+	template <class T> pystr str(const T& value);
 
 	std::ostream& operator<<(std::ostream& os, cPYSTR& value);
 	std::istream& operator>>(std::istream& is, pystr& value);
@@ -60,7 +66,7 @@ namespace py {
 		void isIdxOutOfRange(cINT idx) const;
 		bool isIdxOver(int idx) const;
 		char* Data2CharPtr() const;
-		pystr& CharPtr2Data(cCHAR* char_ptr);
+		pystr& CharPtr2Data(cCHAR* char_ptr, int length);
 
 		pystr lowerChar() const;
 		pystr upperChar() const;
@@ -76,8 +82,10 @@ namespace py {
 	public:
 		pystr();
 		pystr(cCHAR* char_ptr);
+		pystr(cCHAR* char_ptr, int length);
 		pystr(cCHAR character);
 		pystr(cWCHAR* wchar_ptr);
+		pystr(cWCHAR* wchar_ptr, int length);
 		pystr(cWCHAR wchar);
 		pystr(cINT unicode);
 		pystr(cPYSTR& py_str);
@@ -117,8 +125,7 @@ namespace py {
 		pystr ljust(cINT length, cPYSTR& character = " "p) const;
 		pystr lower() const;
 		pystr lstrip() const;
-		//pystr maketrance(cPYSTR& _Tstr, cPYSTR& _VStr, cPYSTR& _RStr = "");
-		/**/
+		map<pystr, pystr> maketrance(cPYSTR& x, cPYSTR& y, cPYSTR& z = "") const;
 		pylist<pystr> partition(cPYSTR& value) const;
 		pystr replace(cPYSTR& oldvalue, cPYSTR& newvalue) const;
 		pystr replace(cPYSTR& oldvalue, cPYSTR& newvalue, cINT count) const;
@@ -137,8 +144,7 @@ namespace py {
 		pystr strip() const;
 		pystr swapcase() const;
 		pystr title() const;
-		//pystr translate(std::map<pystr,pystr> _Dict);
-		/**/
+		pystr translate(const map<pystr,pystr> table) const;
 		pystr upper() const;
 		pystr zfill(cINT len) const;
 
@@ -202,10 +208,10 @@ namespace py {
 		WideCharToMultiByte(CP_ACP, 0, data, -1, char_ptr, multi_byte_len, NULL, NULL);
 		return char_ptr;
 	}
-	pystr& pystr::CharPtr2Data(cCHAR *char_ptr) {
-		int wide_char_len = MultiByteToWideChar(CP_ACP, 0, char_ptr, strlen(char_ptr), NULL, NULL);
+	pystr& pystr::CharPtr2Data(cCHAR *char_ptr, int length) {
+		int wide_char_len = MultiByteToWideChar(CP_ACP, 0, char_ptr, length, NULL, NULL);
 		this->SetVolume(wide_char_len + 1);
-		MultiByteToWideChar(CP_ACP, 0, char_ptr, strlen(char_ptr), this->data_, wide_char_len);
+		MultiByteToWideChar(CP_ACP, 0, char_ptr, length, this->data_, wide_char_len);
 		this->data_[wide_char_len] = '\0';
 		this->length_ = wide_char_len;
 		return *this;
@@ -277,12 +283,28 @@ namespace py {
 	pystr::pystr(cCHAR* char_ptr) {
 		this->operator=(char_ptr);
 	}
+	pystr::pystr(cCHAR* char_ptr, int length) {
+		this->CharPtr2Data(char_ptr, length);
+	}
 	pystr::pystr(cCHAR character) {
 		this->operator=(character);
 	}
 	pystr::pystr(cWCHAR* wchar_ptr) {
 		this->operator=(wchar_ptr);
 	}
+#pragma warning(push)
+#pragma warning(disable:4996)
+	pystr::pystr(cWCHAR* wchar_ptr, int length) {
+		int idx = 0;
+		int null_idx = length;
+		while (this->isIdxOver(null_idx)) this->ExtendVolume();
+		for (int idx = 0; idx < length; idx++) {
+			this->data_[idx] = wchar_ptr[idx];
+		}
+		this->data_[null_idx] = '\0';
+		this->length_ = null_idx;
+	}
+#pragma warning(pop)
 	pystr::pystr(cWCHAR wchar) {
 		this->operator=(wchar);
 	}
@@ -292,9 +314,7 @@ namespace py {
 	pystr::pystr(cPYSTR& ps) {
 		//same as pystr::operator=(str)
 		int null_idx = ps.length_;
-		for (int idx = 0;
-			idx < null_idx; 
-			idx++) {
+		for (int idx = 0; idx < null_idx; idx++) {
 			while (isIdxOver(idx)) this->ExtendVolume();
 			this->data_[idx] = ps.data_[idx];
 		}
@@ -325,9 +345,8 @@ namespace py {
 	}
 	pystr pystr::casefold() const {
 		pystr ret_value;
-		int len = this->length_;
-		for (int idx = 0; idx < len; idx++) {
-			ret_value += (*this)[idx].casefoldChar();
+		for (pystr element : *this) {
+			ret_value += element.casefoldChar();
 		}
 		return ret_value;
 	}
@@ -382,45 +401,40 @@ namespace py {
 	}
 	bool pystr::isalnum() const {
 		if (this->length_ == 0) return false;
-		int len = this->length_;
-		for (int idx = 0; idx < len; idx++) {
-			if ((*this)[idx].isCharAlnum() == true) continue;
+		for (pystr element : *this) {
+			if (element.isCharAlnum() == true) continue;
 			return false;
 		}
 		return true;
 	}
 	bool pystr::isalpha() const {
 		if (this->length_ == 0) return false;
-		int len = this->length_;
-		for (int idx = 0; idx < len; idx++) {
-			if ((*this)[idx].isCharAlpha() == true) continue;
+		for (pystr element : *this) {
+			if (element.isCharAlpha() == true) continue;
 			return false;
 		}
 		return true;
 	}
 	bool pystr::isAscii() const {
 		if (this->length_ == 0) return false;
-		int len = this->length_;
-		for (int idx = 0; idx < len; idx++) {
-			if ((*this)[idx].isCharAscii() == true) continue;
+		for (pystr element : *this) {
+			if (element.isCharAscii() == true) continue;
 			return false;
 		}
 		return true;
 	}
 	bool pystr::isdigit() const {
 		if (this->length_ == 0) return false;
-		int len = this->length_;
-		for (int idx = 0; idx < len; idx++) {
-			if ((*this)[idx].isCharDigit() == true) continue;
+		for (pystr element : *this) {
+			if (element.isCharDigit() == true) continue;
 			return false;
 		}
 		return true;
 	}
 	bool pystr::isdecimal() const {
 		if (this->length_ == 0) return false;
-		int len = this->length_;
-		for (int idx = 0; idx < len; idx++) {
-			if ((*this)[idx].isCharDecimal() == true) continue;
+		for (pystr element : *this) {
+			if (element.isCharDecimal() == true) continue;
 			return false;
 		}
 		return true;
@@ -430,27 +444,24 @@ namespace py {
 	}
 	bool pystr::isnumeric() const {
 		if (this->length_ == 0) return false;
-		int len = this->length_;
-		for (int idx = 0; idx < len; idx++) {
-			if ((*this)[idx].isCharNumeric() == true) continue;
+		for (pystr element : *this) {
+			if (element.isCharNumeric() == true) continue;
 			return false;
 		}
 		return true;
 	}
 	bool pystr::isprintable() const {
 		if (this->length_ == 0) return false;
-		int len = this->length_;
-		for (int idx = 0; idx < len; idx++) {
-			if ((*this)[idx].isCharPrintable() == true) continue;
+		for (pystr element : *this) {
+			if (element.isCharPrintable() == true) continue;
 			return false;
 		}
 		return true;
 	}
 	bool pystr::isspace() const {
 		if (this->length_ == 0) return false;
-		int len = this->length_;
-		for (int idx = 0; idx < len; idx++) {
-			if ((*this)[idx].isCharSpace() == true) continue;
+		for (pystr element : *this) {
+			if (element.isCharSpace() == true) continue;
 			return false;
 		}
 		return true;
@@ -488,9 +499,8 @@ namespace py {
 	}
 	pystr pystr::lower() const {
 		pystr ret_value;
-		int len = this->length_;
-		for (int idx = 0; idx < len; idx++) {
-			ret_value += (*this)[idx].lowerChar();
+		for(pystr element : *this) {
+			ret_value += element.lowerChar();
 		}
 		return ret_value;
 	}
@@ -501,8 +511,17 @@ namespace py {
 		if (idx == len) return "";
 		return this->operator()(idx, "");
 	}
-	//std::map<int, int> pystr::maketrance(cPYSTR& _Tstr, cPYSTR& _VStr, cPYSTR& _RStr);
-	/**/
+	map<pystr, pystr> pystr::maketrance(cPYSTR& x, cPYSTR& y, cPYSTR& z) const {
+		if (x.length_ != y.length_) throw "ValueError: the first two maketrans arguments must have equal length"p;
+		map<pystr, pystr> ret_value;
+		for (int idx = 0; idx < x.length_; idx++) {
+			ret_value[x[idx]] = y[idx];
+		}
+		for (int idx = 0; idx < z.length_; idx++) {
+			ret_value[z[idx]] = '\0';
+		}
+		return ret_value;
+	}
 	pylist<pystr> pystr::partition(cPYSTR& value) const {
 		int idx = this->find(value);
 		if (idx == -1) idx = this->length_;
@@ -612,43 +631,56 @@ namespace py {
 		pystr ret_value;
 		pystr result;
 		int len = this->length_;
-		for (int idx = 0; idx < len; idx++) {
-			if ((*this)[idx] != (result = (*this)[idx].lowerChar())) {
+		for (pystr element : *this) {
+			if (element != (result = element.lowerChar())) {
 				ret_value += result;
 			}
-			else ret_value += (*this)[idx].upperChar();
+			else ret_value += element.upperChar();
 		}
 		return ret_value;
 	}
 	pystr pystr::title() const {
-		pystr ret_value, idx_data;
+		pystr ret_value;
 		pystr cmp = " \n\t\0";
 		bool upper = true;
 		int len = this->length_;
-		for (int idx = 0; idx < len; idx++) {
-			idx_data = (*this)[idx];
-			if (cmp.in_(idx_data)) {
+		for (pystr element : *this) {
+			if (cmp.in_(element)) {
 				upper = true;
 			}
 			else if (upper == true) {
-				idx_data = idx_data.upperChar();
+				element = element.upperChar();
 				upper = false;
 			}
 			else {
-				idx_data = idx_data.lowerChar();
+				element = element.lowerChar();
 			}
-			ret_value += idx_data;
+			ret_value += element;
 		}
 		return ret_value;
 	}
-	//pystr pystr::translate(std::map<pystr,pystr> _Dict);
-	//pystr pystr::translate(std::map<pystr,p> _Dict);
-	/**/
-	pystr pystr::upper() const {
+	pystr pystr::translate(const map<pystr, pystr> table) const {
 		pystr ret_value;
 		int len = this->length_;
 		for (int idx = 0; idx < len; idx++) {
-			ret_value += (*this)[idx].upperChar();
+			bool has_add = false;
+			for (map<pystr, pystr>::const_iterator iter = table.begin(); iter != table.end(); iter++) {
+				if ((*this)[idx] == iter->first) {
+					has_add = true;
+					if (iter->second != '\0') {
+						ret_value += iter->second;
+						break;
+					}
+				}
+			}
+			if (has_add == false) ret_value += (*this)[idx];
+		}
+		return ret_value;
+	}
+	pystr pystr::upper() const {
+		pystr ret_value;
+		for (pystr element : *this) {
+			ret_value += element.upperChar();
 		}
 		return ret_value;
 	}
@@ -696,7 +728,7 @@ namespace py {
 		return *this;
 	}
 	pystr& pystr::operator=(cCHAR* right) {
-		return this->CharPtr2Data(right);
+		return this->CharPtr2Data(right, strlen(right));
 	}
 	pystr& pystr::operator=(cCHAR right) {
 		char char2pystr[2] = { right, '\0' };
@@ -704,7 +736,7 @@ namespace py {
 	}
 	pystr& pystr::operator=(cWCHAR* right) {
 		int idx = 0;
-		int null_idx = this->length_ + wcslen(right);
+		int null_idx = wcslen(right);
 		while (this->isIdxOver(null_idx)) this->ExtendVolume();
 		wcscpy(this->data_, right);
 		this->data_[null_idx] = '\0';
@@ -729,7 +761,7 @@ namespace py {
 #pragma warning(pop)
 
 	std::ostream& operator<<(std::ostream& os, cPYSTR& value) {
-		os << value.Data2CharPtr();
+		for (pystr element : value) os << element.c_str();
 		return os;
 	}
 	std::istream& operator>>(std::istream& is, pystr& target) {
@@ -762,7 +794,7 @@ namespace py {
 #pragma warning(push)
 #pragma warning(disable:4455)
 	pystr operator ""p(cCHAR* char_ptr, size_t len) {
-		pystr ret_value = char_ptr;
+		pystr ret_value(char_ptr, len);
 		return ret_value;
 	}
 #pragma warning(pop)
@@ -807,25 +839,11 @@ namespace py {
 		if (!(0 <= unicode && unicode <= 0x10FFFF)) throw "chr() arg not in range("p + str(unicode) + ")"p;
 		return (wchar_t)unicode;
 	}
-	pystr str(const double& number) {
-		pystr py_str;
-		int int_value = (number + 0.00000000005);
-		double decimal_value = (number + 0.00000000005) - int_value;
-		while (int_value > 0) {
-			py_str = chr((int_value % 10) + ord("0")) + py_str;
-			int_value /= 10;
-		}
-		int count = 10;
-		//              1234567890
-		double cmp = 0.0000000001;
-		if (decimal_value > cmp) py_str += ".";
-		while (count-- && decimal_value > cmp) {
-			decimal_value *= 10;
-			py_str += chr((int)decimal_value + ord("0"));
-			decimal_value -= (int)decimal_value;
-			cmp *= 10;
-		}
-		return py_str;
+	template<class T>
+	pystr str(const T& value) {
+		std::ostringstream ret_value;
+		ret_value << value;
+		return ret_value.str().c_str();
 	}
 	pystr to_py(cPYSTR& ps) {
 		return ps;
