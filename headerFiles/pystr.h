@@ -1,417 +1,852 @@
 #pragma once
-#ifndef _PYTHONLIST_
-#define _PYTHONLIST_
-#include <iostream>
+#ifndef _PYTHONSTRNG_
+#define _PYTHONSTRNG_
 
-#include <algorithm>
-#include "pystr.h"
+#include <iostream>
+#include <windows.h>
+#include <sstream>
+#include <stdarg.h> 
+
+#include <map>
+#include "pylist.h"
 
 namespace py {
-	using std::initializer_list;
+	class pystr;
 
-	template <class T> class pylist;
-	template <class T> class pylist_node;
-	template <class T> int len(pylist<T> value);
+	using cINT		= const int;
+	using cCHAR		= const char;
+	using cWCHAR	= const wchar_t;
+	using cPYSTR	= const pystr;
 
-	template <class T> using lnode = pylist_node<T>;
+	int len(cPYSTR& ps);
+	int ord(cPYSTR& ps);
+	pystr chr(cINT& unicode);
+	template <class T> pystr str(const T& value);
 
-	template <class T>
-	class pylist_node {
-		friend class pylist<T>;
+	std::ostream& operator<<(std::ostream& os, cPYSTR& value);
+	std::istream& operator>>(std::istream& is, pystr& value);
+	pystr operator+(cPYSTR& left, cPYSTR& right);
+	bool operator==(cPYSTR& left, cPYSTR& right);
+	bool operator!=(cPYSTR& left, cPYSTR& right);
+	bool operator<(cPYSTR& left, cPYSTR& right);
+	bool operator<=(cPYSTR& left, cPYSTR& right);
+	bool operator>(cPYSTR& left, cPYSTR& right);
+	bool operator>=(cPYSTR& left, cPYSTR& right);
+	pystr operator*(cPYSTR& left, cINT count);
+#pragma warning(push)
+#pragma warning(disable:4455)
+	pystr operator ""p(cCHAR* char_ptr, size_t len);
+	
+	class pystr {
+		friend pystr operator""p(cCHAR* char_ptr, size_t len);
+#pragma warning(pop)
+		friend std::ostream& operator<<(std::ostream& os, cPYSTR& value);
+		friend std::istream& operator>>(std::istream& is, pystr& value);
+		friend pystr operator+(cPYSTR& left, cPYSTR& right);
+		friend bool operator==(cPYSTR& left, cPYSTR& right);
+		friend bool operator!=(cPYSTR& left, cPYSTR& right);
+		friend bool operator<(cPYSTR& left, cPYSTR& right);
+		friend bool operator<=(cPYSTR& left, cPYSTR& right);
+		friend bool operator>(cPYSTR& left, cPYSTR& right);
+		friend bool operator>=(cPYSTR& left, cPYSTR& right);
+		friend pystr operator*(cPYSTR& left, cINT count);
+		friend int len(cPYSTR& ps);
+		friend int ord(cPYSTR& ps);
 	private:
-		T range_data_;
-		lnode<T>* next_;
-		lnode<T>* prev_;
-	};
+		int length_ = 0;
+		int volume_ = 0;
+		wchar_t* data_;
 
-	template <class T>
-	class pylist {
-		template <class T> friend std::ostream& operator<<(std::ostream& os, const pylist<T>& value);
-		template <class T> friend pylist<T> operator+(const pylist<T>& left, const pylist<T>& right);
-		template <class T> friend int len(const pylist<T> value);
-	private:
-		lnode<T>* head_ = nullptr;
-		lnode<T>* tail_ = nullptr;
-		int size_ = 0;
-
+		void SetupVolume(cINT size);
+		void ExtendVolume();
+		void SetVolume(cINT size);
 		void SetIdx(int* idx) const;
-		void isIdxOutOfRange(const int idx) const;
+		void SetResizedIdx(int* idx) const;
+		void isIdxOutOfRange(cINT idx) const;
+		bool isIdxOver(int idx) const;
+		char* Data2CharPtr() const;
+		pystr& CharPtr2Data(cCHAR* char_ptr, int length);
 
-		lnode<T>* MakeNewNode(const T& value);
-		lnode<T>* FindNode(const int idx) const;
-		void RemveNode(lnode<T>* node_ptr);
-
-		T* range_data_;
-		int range_volume_ = 0;
-		bool is_changed_ = false;
-		void SetRangeData();
+		pystr lowerChar() const;
+		pystr upperChar() const;
+		pystr casefoldChar() const;
+		bool isCharAlnum() const;
+		bool isCharAlpha() const;
+		bool isCharAscii() const;
+		bool isCharDigit() const;
+		bool isCharDecimal() const;
+		bool isCharNumeric() const;
+		bool isCharPrintable() const;
+		bool isCharSpace() const;
 	public:
-		pylist();
-		pylist(int count, T value);
-		pylist(initializer_list<T> value);
-		pylist(const pylist<T>& value);
-		~pylist();
+		pystr();
+		pystr(cCHAR* char_ptr);
+		pystr(cCHAR* char_ptr, int length);
+		pystr(cCHAR character);
+		pystr(cWCHAR* wchar_ptr);
+		pystr(cWCHAR* wchar_ptr, int length);
+		pystr(cWCHAR wchar);
+		pystr(cINT unicode);
+		pystr(cPYSTR& py_str);
+		~pystr();
 
-		T* begin();
-		T* end();
+		cWCHAR* begin() const;
+		cWCHAR* end() const;
+		char* c_str() const;
 
-		pylist<T>& append(const T& value);
-		T pop(const int idx = -1);
-		pylist<T>& del(const int idx);
-		pylist<T>& del(const int start, const int end, const int step = 1);
-		pylist<T>& del(const char* start, const int end, const int step = 1);
-		pylist<T>& del(const int start, const char* end, const int step = 1);
-		pylist<T>& del(const char* start, const char* end, const int step = 1);
-		pylist<T>& sort();
-		pylist<T>& reverse();
-		int index(const T value);
-		pylist<T>& insert(const int idx, T value);
-		pylist<T>& remove(const T value);
-		int count(const T value);
-		pylist<T>& extend(const pylist<T> _List);
-		pylist<T> copy() const;
-		pylist<T>& clear();
+		bool in_(cPYSTR value);
 
-		T* operator[](int idx) const;
-		pylist<T>& operator=(initializer_list<T> right);
-		pylist<T>& operator=(const pylist<T>& right);
-		pylist<T>& operator+=(const pylist<T>& right);
-		pylist<T> operator*(const int value) const;
-		pylist<T> operator()(const int start, const int end, const int step = 1) const;
-		pylist<T> operator()(const char* start, const int end, const int step = 1) const;
-		pylist<T> operator()(const int start, const char* end, const int step = 1) const;
-		pylist<T> operator()(const char* start, const char* end, const int step = 1) const;
+		pystr capitalize() const;
+		pystr casefold() const;
+		pystr center(cINT length, cPYSTR& character = " "p) const;
+		int count(cPYSTR& value, cINT start = 0) const;
+		int count(cPYSTR& value, cINT start, cINT end) const;
+		bool endswith(cPYSTR& value, cINT start = 0) const;
+		bool endswith(cPYSTR& value, cINT start, cINT end) const;
+		pystr expandtabs(cINT tabsize = 8) const;
+		int find(cPYSTR& value, cINT start, cINT end) const;
+		int find(cPYSTR& value, cINT start = 0) const;
+		int index(cPYSTR& value, cINT start, cINT end) const;
+		int index(cPYSTR& value, cINT start = 0) const;
+		bool isalnum() const;
+		bool isalpha() const;
+		bool isAscii() const;
+		bool isdigit() const;
+		bool isdecimal() const;
+		bool islower() const;
+		bool isnumeric() const;
+		bool isprintable() const;
+		bool isspace() const;
+		bool istitle() const;
+		bool isupper() const;
+		pystr join(cPYSTR& iterable) const;
+		pystr join(pylist<pystr> iterable) const;
+		pystr ljust(cINT length, cPYSTR& character = " "p) const;
+		pystr lower() const;
+		pystr lstrip() const;
+		std::map<pystr, pystr> maketrance(cPYSTR& x, cPYSTR& y, cPYSTR& z = "") const;
+		pylist<pystr> partition(cPYSTR& value) const;
+		pystr replace(cPYSTR& oldvalue, cPYSTR& newvalue) const;
+		pystr replace(cPYSTR& oldvalue, cPYSTR& newvalue, cINT count) const;
+		int rfind(cPYSTR& value, cINT start, cINT end) const;
+		int rfind(cPYSTR& value, cINT start = 0) const;
+		int rindex(cPYSTR& value, cINT start = 0) const;
+		int rindex(cPYSTR& value, cINT start, cINT end) const;
+		pystr rjust(cINT length, cPYSTR& character = " "p) const;
+		pylist<pystr> rpartition(cPYSTR& value) const;
+		pystr rstrip() const;
+		pylist<pystr> split(cPYSTR& separator = " "p) const;
+		pylist<pystr> split(cPYSTR& separator, cINT maxsplit) const;
+		pylist<pystr> splitlines(const bool keeplinebreaks = false) const;
+		bool startwith(cPYSTR& value, cINT start = 0) const;
+		bool startwith(cPYSTR& value, cINT start, cINT end) const;
+		pystr strip() const;
+		pystr swapcase() const;
+		pystr title() const;
+		pystr translate(const std::map<pystr,pystr> table) const;
+		pystr upper() const;
+		pystr zfill(cINT len) const;
+
+		pystr operator[](cINT index) const;
+		pystr operator()(cINT start, cINT end, cINT step = 1) const;
+		pystr operator()(cCHAR* start, cINT end, cINT step = 1) const;
+		pystr operator()(cINT start, cCHAR* end, cINT step = 1) const;
+		pystr operator()(cCHAR* start, cCHAR* end, cINT step = 1) const;
+		pystr& operator=(cPYSTR& right);
+		pystr& operator=(cCHAR* right);
+		pystr& operator=(cCHAR right);
+		pystr& operator=(cWCHAR* right);
+		pystr& operator=(cWCHAR right);
+		pystr& operator+=(cPYSTR& right);
 	};
-	template <class T> std::ostream& operator<<(std::ostream& os, const pylist<T>& value) {
-		os << "{";
-		int size = value.size_;
-		for (int idx = 0; idx < size - 1; idx++) {
-			os << *value[idx] << ", ";
+	void pystr::SetupVolume(cINT size) {
+		if (this->volume_ == 0) {
+			this->data_ = (wchar_t*)calloc(size, sizeof(wchar_t) * size);
+			this->volume_ = size;
 		}
-		if (size) os << *value[size - 1];
-		os << "}";
-		return os;
 	}
-	template <class T> pylist<T> operator+(const pylist<T>& left, const pylist<T>& right) {
-		pylist<T> ret_value = left;
-		return ret_value += right;
+	void pystr::ExtendVolume() {
+		if (this->volume_ == 0) this->SetupVolume(1);
+		else this->SetVolume(this->volume_ * 2);
 	}
-
-	template <class T> void pylist<T>::SetIdx(int* idx) const {
-		if (*idx < 0) *idx += this->size_;
-	}
-	template <class T> void pylist<T>::isIdxOutOfRange(const int idx)  const {
-		if (idx < 0 || this->size_ <= idx) throw py::to_py("IndexError: list index out of range");
-	}
-
-	template <class T> lnode<T>* pylist<T>::MakeNewNode(const T& value) {
-		lnode<T>* new_node = (lnode<T>*)calloc(1, sizeof(lnode<T>));
-		new_node->range_data_ = value;
-		new_node->next_ = nullptr;
-		new_node->prev_ = nullptr;
-		this->size_++;
-		this->is_changed_ = true;
-		return new_node;
-	}
-	template <class T> lnode<T>* pylist<T>::FindNode(int idx) const {
-		this->SetIdx(&idx);
-		this->isIdxOutOfRange(idx);
-
-		lnode<T>* ret_value;
-		if (idx < (this->size_ / 2)) {
-			ret_value = this->head_;
-			int idx_cnt = 0;
-			while (idx_cnt != idx) {
-				ret_value = ret_value->next_;
-				idx_cnt++;
+	void pystr::SetVolume(cINT size) {
+		if (this->volume_ == 0) {
+			this->SetupVolume(size);
+			return;
+		}
+		while (1) {
+			wchar_t* temp = (wchar_t*)realloc(this->data_, sizeof(wchar_t) * size);
+			if (temp != NULL) {
+				this->data_ = temp;
+				this->volume_ = size;
+				break;
 			}
 		}
-		else {
-			ret_value = this->tail_;
-			int idx_cnt = this->size_ - 1;
-			while (idx_cnt != idx) {
-				ret_value = ret_value->prev_;
-				idx_cnt--;
-			}
+	}
+
+	void pystr::SetIdx(int* idx) const {
+		if (*idx < 0) *idx += this->length_;
+	}
+	void pystr::SetResizedIdx(int* idx) const {
+		this->SetIdx(idx);
+		if (*idx < 0) *idx = 0;
+		int len = this->length_;
+		if (*idx >= len) *idx = len;
+	}
+	void pystr::isIdxOutOfRange(cINT idx) const {
+		if (idx < 0 || this->length_ <= idx) IndexError("string index out of range");
+	}
+	bool pystr::isIdxOver(int idx) const {
+		return this->volume_ <= idx + 1;
+	}
+
+	char* pystr::Data2CharPtr() const {
+		wchar_t *data = this->data_;
+		int multi_byte_len = WideCharToMultiByte(CP_ACP, 0, data, -1, NULL, 0, NULL, NULL);
+		char* char_ptr = new char[multi_byte_len];
+		WideCharToMultiByte(CP_ACP, 0, data, -1, char_ptr, multi_byte_len, NULL, NULL);
+		return char_ptr;
+	}
+	pystr& pystr::CharPtr2Data(cCHAR *char_ptr, int length) {
+		int wide_char_len = MultiByteToWideChar(CP_ACP, 0, char_ptr, length, NULL, NULL);
+		this->SetVolume(wide_char_len + 1);
+		MultiByteToWideChar(CP_ACP, 0, char_ptr, length, this->data_, wide_char_len);
+		this->data_[wide_char_len] = '\0';
+		this->length_ = wide_char_len;
+		return *this;
+	}
+
+#pragma warning(push)
+#pragma warning(disable: 4466)
+#pragma warning(disable: 4566)
+	pystr pystr::lowerChar() const {
+		pystr character = (*this)[0];
+		if (character == 304) { return "i̇"; }if (65 <= character && character <= 90 || 192 <= character && character <= 214 || 216 <= character && character <= 222 || 913 <= character && character <= 929 || 931 <= character && character <= 939 || 1040 <= character && character <= 1071 || 65313 <= character && character <= 65338 || 71840 <= character && character <= 71871 || 93760 <= character && character <= 93791 || false) { return ord(character) + 32; }if (character == 256 || character == 258 || character == 260 || character == 262 || character == 264 || character == 266 || character == 268 || character == 270 || character == 272 || character == 274 || character == 276 || character == 278 || character == 280 || character == 282 || character == 284 || character == 286 || character == 288 || character == 290 || character == 292 || character == 294 || character == 296 || character == 298 || character == 300 || character == 302 || character == 306 || character == 308 || character == 310 || character == 313 || character == 315 || character == 317 || character == 319 || character == 321 || character == 323 || character == 325 || character == 327 || character == 330 || character == 332 || character == 334 || character == 336 || character == 338 || character == 340 || character == 342 || character == 344 || character == 346 || character == 348 || character == 350 || character == 352 || character == 354 || character == 356 || character == 358 || character == 360 || character == 362 || character == 364 || character == 366 || character == 368 || character == 370 || character == 372 || character == 374 || character == 377 || character == 379 || character == 381 || character == 386 || character == 388 || character == 391 || character == 395 || character == 401 || character == 408 || character == 416 || character == 418 || character == 420 || character == 423 || character == 428 || character == 431 || character == 435 || character == 437 || character == 440 || character == 444 || character == 453 || character == 456 || character == 459 || character == 461 || character == 463 || character == 465 || character == 467 || character == 469 || character == 471 || character == 473 || character == 475 || character == 478 || character == 480 || character == 482 || character == 484 || character == 486 || character == 488 || character == 490 || character == 492 || character == 494 || character == 498 || character == 500 || character == 504 || character == 506 || character == 508 || character == 510 || character == 512 || character == 514 || character == 516 || character == 518 || character == 520 || character == 522 || character == 524 || character == 526 || character == 528 || character == 530 || character == 532 || character == 534 || character == 536 || character == 538 || character == 540 || character == 542 || character == 546 || character == 548 || character == 550 || character == 552 || character == 554 || character == 556 || character == 558 || character == 560 || character == 562 || character == 571 || character == 577 || character == 582 || character == 584 || character == 586 || character == 588 || character == 590 || character == 880 || character == 882 || character == 886 || character == 984 || character == 986 || character == 988 || character == 990 || character == 992 || character == 994 || character == 996 || character == 998 || character == 1000 || character == 1002 || character == 1004 || character == 1006 || character == 1015 || character == 1018 || character == 1120 || character == 1122 || character == 1124 || character == 1126 || character == 1128 || character == 1130 || character == 1132 || character == 1134 || character == 1136 || character == 1138 || character == 1140 || character == 1142 || character == 1144 || character == 1146 || character == 1148 || character == 1150 || character == 1152 || character == 1162 || character == 1164 || character == 1166 || character == 1168 || character == 1170 || character == 1172 || character == 1174 || character == 1176 || character == 1178 || character == 1180 || character == 1182 || character == 1184 || character == 1186 || character == 1188 || character == 1190 || character == 1192 || character == 1194 || character == 1196 || character == 1198 || character == 1200 || character == 1202 || character == 1204 || character == 1206 || character == 1208 || character == 1210 || character == 1212 || character == 1214 || character == 1217 || character == 1219 || character == 1221 || character == 1223 || character == 1225 || character == 1227 || character == 1229 || character == 1232 || character == 1234 || character == 1236 || character == 1238 || character == 1240 || character == 1242 || character == 1244 || character == 1246 || character == 1248 || character == 1250 || character == 1252 || character == 1254 || character == 1256 || character == 1258 || character == 1260 || character == 1262 || character == 1264 || character == 1266 || character == 1268 || character == 1270 || character == 1272 || character == 1274 || character == 1276 || character == 1278 || character == 1280 || character == 1282 || character == 1284 || character == 1286 || character == 1288 || character == 1290 || character == 1292 || character == 1294 || character == 1296 || character == 1298 || character == 1300 || character == 1302 || character == 1304 || character == 1306 || character == 1308 || character == 1310 || character == 1312 || character == 1314 || character == 1316 || character == 1318 || character == 1320 || character == 1322 || character == 1324 || character == 1326 || character == 7680 || character == 7682 || character == 7684 || character == 7686 || character == 7688 || character == 7690 || character == 7692 || character == 7694 || character == 7696 || character == 7698 || character == 7700 || character == 7702 || character == 7704 || character == 7706 || character == 7708 || character == 7710 || character == 7712 || character == 7714 || character == 7716 || character == 7718 || character == 7720 || character == 7722 || character == 7724 || character == 7726 || character == 7728 || character == 7730 || character == 7732 || character == 7734 || character == 7736 || character == 7738 || character == 7740 || character == 7742 || character == 7744 || character == 7746 || character == 7748 || character == 7750 || character == 7752 || character == 7754 || character == 7756 || character == 7758 || character == 7760 || character == 7762 || character == 7764 || character == 7766 || character == 7768 || character == 7770 || character == 7772 || character == 7774 || character == 7776 || character == 7778 || character == 7780 || character == 7782 || character == 7784 || character == 7786 || character == 7788 || character == 7790 || character == 7792 || character == 7794 || character == 7796 || character == 7798 || character == 7800 || character == 7802 || character == 7804 || character == 7806 || character == 7808 || character == 7810 || character == 7812 || character == 7814 || character == 7816 || character == 7818 || character == 7820 || character == 7822 || character == 7824 || character == 7826 || character == 7828 || character == 7840 || character == 7842 || character == 7844 || character == 7846 || character == 7848 || character == 7850 || character == 7852 || character == 7854 || character == 7856 || character == 7858 || character == 7860 || character == 7862 || character == 7864 || character == 7866 || character == 7868 || character == 7870 || character == 7872 || character == 7874 || character == 7876 || character == 7878 || character == 7880 || character == 7882 || character == 7884 || character == 7886 || character == 7888 || character == 7890 || character == 7892 || character == 7894 || character == 7896 || character == 7898 || character == 7900 || character == 7902 || character == 7904 || character == 7906 || character == 7908 || character == 7910 || character == 7912 || character == 7914 || character == 7916 || character == 7918 || character == 7920 || character == 7922 || character == 7924 || character == 7926 || character == 7928 || character == 7930 || character == 7932 || character == 7934 || character == 8579 || character == 11360 || character == 11367 || character == 11369 || character == 11371 || character == 11378 || character == 11381 || character == 11392 || character == 11394 || character == 11396 || character == 11398 || character == 11400 || character == 11402 || character == 11404 || character == 11406 || character == 11408 || character == 11410 || character == 11412 || character == 11414 || character == 11416 || character == 11418 || character == 11420 || character == 11422 || character == 11424 || character == 11426 || character == 11428 || character == 11430 || character == 11432 || character == 11434 || character == 11436 || character == 11438 || character == 11440 || character == 11442 || character == 11444 || character == 11446 || character == 11448 || character == 11450 || character == 11452 || character == 11454 || character == 11456 || character == 11458 || character == 11460 || character == 11462 || character == 11464 || character == 11466 || character == 11468 || character == 11470 || character == 11472 || character == 11474 || character == 11476 || character == 11478 || character == 11480 || character == 11482 || character == 11484 || character == 11486 || character == 11488 || character == 11490 || character == 11499 || character == 11501 || character == 11506 || character == 42560 || character == 42562 || character == 42564 || character == 42566 || character == 42568 || character == 42570 || character == 42572 || character == 42574 || character == 42576 || character == 42578 || character == 42580 || character == 42582 || character == 42584 || character == 42586 || character == 42588 || character == 42590 || character == 42592 || character == 42594 || character == 42596 || character == 42598 || character == 42600 || character == 42602 || character == 42604 || character == 42624 || character == 42626 || character == 42628 || character == 42630 || character == 42632 || character == 42634 || character == 42636 || character == 42638 || character == 42640 || character == 42642 || character == 42644 || character == 42646 || character == 42648 || character == 42650 || character == 42786 || character == 42788 || character == 42790 || character == 42792 || character == 42794 || character == 42796 || character == 42798 || character == 42802 || character == 42804 || character == 42806 || character == 42808 || character == 42810 || character == 42812 || character == 42814 || character == 42816 || character == 42818 || character == 42820 || character == 42822 || character == 42824 || character == 42826 || character == 42828 || character == 42830 || character == 42832 || character == 42834 || character == 42836 || character == 42838 || character == 42840 || character == 42842 || character == 42844 || character == 42846 || character == 42848 || character == 42850 || character == 42852 || character == 42854 || character == 42856 || character == 42858 || character == 42860 || character == 42862 || character == 42873 || character == 42875 || character == 42878 || character == 42880 || character == 42882 || character == 42884 || character == 42886 || character == 42891 || character == 42896 || character == 42898 || character == 42902 || character == 42904 || character == 42906 || character == 42908 || character == 42910 || character == 42912 || character == 42914 || character == 42916 || character == 42918 || character == 42920 || character == 42932 || character == 42934 || character == 42936 || character == 42938 || character == 42940 || character == 42942 || character == 42946 || character == 42951 || character == 42953 || character == 42997 || false) { return ord(character) + 1; }if (character == 376 || false) { return ord(character) + -121; }if (character == 385 || false) { return ord(character) + 210; }if (character == 390 || false) { return ord(character) + 206; }if (393 <= character && character <= 394 || character == 403 || false) { return ord(character) + 205; }if (character == 398 || false) { return ord(character) + 79; }if (character == 399 || false) { return ord(character) + 202; }if (character == 400 || false) { return ord(character) + 203; }if (character == 404 || false) { return ord(character) + 207; }if (character == 406 || character == 412 || false) { return ord(character) + 211; }if (character == 407 || false) { return ord(character) + 209; }if (character == 413 || false) { return ord(character) + 213; }if (character == 415 || false) { return ord(character) + 214; }if (character == 422 || character == 425 || character == 430 || false) { return ord(character) + 218; }if (433 <= character && character <= 434 || false) { return ord(character) + 217; }if (character == 439 || false) { return ord(character) + 219; }if (character == 452 || character == 455 || character == 458 || character == 497 || false) { return ord(character) + 2; }if (character == 502 || false) { return ord(character) + -97; }if (character == 503 || false) { return ord(character) + -56; }if (character == 544 || 1021 <= character && character <= 1023 || false) { return ord(character) + -130; }if (character == 570 || false) { return ord(character) + 10795; }if (character == 573 || false) { return ord(character) + -163; }if (character == 574 || false) { return ord(character) + 10792; }if (character == 579 || false) { return ord(character) + -195; }if (character == 580 || false) { return ord(character) + 69; }if (character == 581 || false) { return ord(character) + 71; }if (character == 895 || false) { return ord(character) + 116; }if (character == 902 || false) { return ord(character) + 38; }if (904 <= character && character <= 906 || false) { return ord(character) + 37; }if (character == 908 || 68736 <= character && character <= 68786 || false) { return ord(character) + 64; }if (910 <= character && character <= 911 || false) { return ord(character) + 63; }if (character == 975 || 5104 <= character && character <= 5109 || false) { return ord(character) + 8; }if (character == 1012 || false) { return ord(character) + -60; }if (character == 1017 || character == 8172 || false) { return ord(character) + -7; }if (1024 <= character && character <= 1039 || false) { return ord(character) + 80; }if (character == 1216 || false) { return ord(character) + 15; }if (1329 <= character && character <= 1366 || 11264 <= character && character <= 11310 || false) { return ord(character) + 48; }if (4256 <= character && character <= 4293 || character == 4295 || character == 4301 || false) { return ord(character) + 7264; }if (5024 <= character && character <= 5103 || false) { return ord(character) + 38864; }if (7312 <= character && character <= 7354 || 7357 <= character && character <= 7359 || false) { return ord(character) + -3008; }if (character == 7838 || false) { return ord(character) + -7615; }if (7944 <= character && character <= 7951 || 7960 <= character && character <= 7965 || 7976 <= character && character <= 7983 || 7992 <= character && character <= 7999 || 8008 <= character && character <= 8013 || character == 8025 || character == 8027 || character == 8029 || character == 8031 || 8040 <= character && character <= 8047 || 8072 <= character && character <= 8079 || 8088 <= character && character <= 8095 || 8104 <= character && character <= 8111 || 8120 <= character && character <= 8121 || 8152 <= character && character <= 8153 || 8168 <= character && character <= 8169 || false) { return ord(character) + -8; }if (8122 <= character && character <= 8123 || false) { return ord(character) + -74; }if (character == 8124 || character == 8140 || character == 8188 || false) { return ord(character) + -9; }if (8136 <= character && character <= 8139 || false) { return ord(character) + -86; }if (8154 <= character && character <= 8155 || false) { return ord(character) + -100; }if (8170 <= character && character <= 8171 || false) { return ord(character) + -112; }if (8184 <= character && character <= 8185 || false) { return ord(character) + -128; }if (8186 <= character && character <= 8187 || false) { return ord(character) + -126; }if (character == 8486 || false) { return ord(character) + -7517; }if (character == 8490 || false) { return ord(character) + -8383; }if (character == 8491 || false) { return ord(character) + -8262; }if (character == 8498 || false) { return ord(character) + 28; }if (8544 <= character && character <= 8559 || false) { return ord(character) + 16; }if (9398 <= character && character <= 9423 || false) { return ord(character) + 26; }if (character == 11362 || false) { return ord(character) + -10743; }if (character == 11363 || false) { return ord(character) + -3814; }if (character == 11364 || false) { return ord(character) + -10727; }if (character == 11373 || false) { return ord(character) + -10780; }if (character == 11374 || false) { return ord(character) + -10749; }if (character == 11375 || false) { return ord(character) + -10783; }if (character == 11376 || false) { return ord(character) + -10782; }if (11390 <= character && character <= 11391 || false) { return ord(character) + -10815; }if (character == 42877 || false) { return ord(character) + -35332; }if (character == 42893 || false) { return ord(character) + -42280; }if (character == 42922 || character == 42926 || false) { return ord(character) + -42308; }if (character == 42923 || false) { return ord(character) + -42319; }if (character == 42924 || false) { return ord(character) + -42315; }if (character == 42925 || false) { return ord(character) + -42305; }if (character == 42928 || false) { return ord(character) + -42258; }if (character == 42929 || false) { return ord(character) + -42282; }if (character == 42930 || false) { return ord(character) + -42261; }if (character == 42931 || false) { return ord(character) + 928; }if (character == 42948 || false) { return ord(character) + -48; }if (character == 42949 || false) { return ord(character) + -42307; }if (character == 42950 || false) { return ord(character) + -35384; }if (66560 <= character && character <= 66599 || 66736 <= character && character <= 66771 || false) { return ord(character) + 40; }if (125184 <= character && character <= 125217 || false) { return ord(character) + 34; }
+		return character;
+	}
+	pystr pystr::upperChar() const {
+		pystr character = (*this)[0];
+		if (character == 223) { return "SS"; }if (character == 329) { return "ʼN"; }if (character == 496) { return "J̌"; }if (character == 912) { return "Ϊ́"; }if (character == 944) { return "Ϋ́"; }if (character == 1415) { return "ԵՒ"; }if (character == 7830) { return "H̱"; }if (character == 7831) { return "T̈"; }if (character == 7832) { return "W̊"; }if (character == 7833) { return "Y̊"; }if (character == 7834) { return "Aʾ"; }if (character == 8016) { return "Υ̓"; }if (character == 8018) { return "Υ̓̀"; }if (character == 8020) { return "Υ̓́"; }if (character == 8022) { return "Υ̓͂"; }if (character == 8064) { return "ἈΙ"; }if (character == 8065) { return "ἉΙ"; }if (character == 8066) { return "ἊΙ"; }if (character == 8067) { return "ἋΙ"; }if (character == 8068) { return "ἌΙ"; }if (character == 8069) { return "ἍΙ"; }if (character == 8070) { return "ἎΙ"; }if (character == 8071) { return "ἏΙ"; }if (character == 8072) { return "ἈΙ"; }if (character == 8073) { return "ἉΙ"; }if (character == 8074) { return "ἊΙ"; }if (character == 8075) { return "ἋΙ"; }if (character == 8076) { return "ἌΙ"; }if (character == 8077) { return "ἍΙ"; }if (character == 8078) { return "ἎΙ"; }if (character == 8079) { return "ἏΙ"; }if (character == 8080) { return "ἨΙ"; }if (character == 8081) { return "ἩΙ"; }if (character == 8082) { return "ἪΙ"; }if (character == 8083) { return "ἫΙ"; }if (character == 8084) { return "ἬΙ"; }if (character == 8085) { return "ἭΙ"; }if (character == 8086) { return "ἮΙ"; }if (character == 8087) { return "ἯΙ"; }if (character == 8088) { return "ἨΙ"; }if (character == 8089) { return "ἩΙ"; }if (character == 8090) { return "ἪΙ"; }if (character == 8091) { return "ἫΙ"; }if (character == 8092) { return "ἬΙ"; }if (character == 8093) { return "ἭΙ"; }if (character == 8094) { return "ἮΙ"; }if (character == 8095) { return "ἯΙ"; }if (character == 8096) { return "ὨΙ"; }if (character == 8097) { return "ὩΙ"; }if (character == 8098) { return "ὪΙ"; }if (character == 8099) { return "ὫΙ"; }if (character == 8100) { return "ὬΙ"; }if (character == 8101) { return "ὭΙ"; }if (character == 8102) { return "ὮΙ"; }if (character == 8103) { return "ὯΙ"; }if (character == 8104) { return "ὨΙ"; }if (character == 8105) { return "ὩΙ"; }if (character == 8106) { return "ὪΙ"; }if (character == 8107) { return "ὫΙ"; }if (character == 8108) { return "ὬΙ"; }if (character == 8109) { return "ὭΙ"; }if (character == 8110) { return "ὮΙ"; }if (character == 8111) { return "ὯΙ"; }if (character == 8114) { return "ᾺΙ"; }if (character == 8115) { return "ΑΙ"; }if (character == 8116) { return "ΆΙ"; }if (character == 8118) { return "Α͂"; }if (character == 8119) { return "Α͂Ι"; }if (character == 8124) { return "ΑΙ"; }if (character == 8130) { return "ῊΙ"; }if (character == 8131) { return "ΗΙ"; }if (character == 8132) { return "ΉΙ"; }if (character == 8134) { return "Η͂"; }if (character == 8135) { return "Η͂Ι"; }if (character == 8140) { return "ΗΙ"; }if (character == 8146) { return "Ϊ̀"; }if (character == 8147) { return "Ϊ́"; }if (character == 8150) { return "Ι͂"; }if (character == 8151) { return "Ϊ͂"; }if (character == 8162) { return "Ϋ̀"; }if (character == 8163) { return "Ϋ́"; }if (character == 8164) { return "Ρ̓"; }if (character == 8166) { return "Υ͂"; }if (character == 8167) { return "Ϋ͂"; }if (character == 8178) { return "ῺΙ"; }if (character == 8179) { return "ΩΙ"; }if (character == 8180) { return "ΏΙ"; }if (character == 8182) { return "Ω͂"; }if (character == 8183) { return "Ω͂Ι"; }if (character == 8188) { return "ΩΙ"; }if (character == 64256) { return "FF"; }if (character == 64257) { return "FI"; }if (character == 64258) { return "FL"; }if (character == 64259) { return "FFI"; }if (character == 64260) { return "FFL"; }if (character == 64261) { return "ST"; }if (character == 64262) { return "ST"; }if (character == 64275) { return "ՄՆ"; }if (character == 64276) { return "ՄԵ"; }if (character == 64277) { return "ՄԻ"; }if (character == 64278) { return "ՎՆ"; }if (character == 64279) { return "ՄԽ"; }if (97 <= character && character <= 122 || 224 <= character && character <= 246 || 248 <= character && character <= 254 || 945 <= character && character <= 961 || 963 <= character && character <= 971 || 1072 <= character && character <= 1103 || 65345 <= character && character <= 65370 || 71872 <= character && character <= 71903 || 93792 <= character && character <= 93823 || false) { return ord(character) + -32; }if (character == 181 || false) { return ord(character) + 743; }if (character == 255 || false) { return ord(character) + 121; }if (character == 257 || character == 259 || character == 261 || character == 263 || character == 265 || character == 267 || character == 269 || character == 271 || character == 273 || character == 275 || character == 277 || character == 279 || character == 281 || character == 283 || character == 285 || character == 287 || character == 289 || character == 291 || character == 293 || character == 295 || character == 297 || character == 299 || character == 301 || character == 303 || character == 307 || character == 309 || character == 311 || character == 314 || character == 316 || character == 318 || character == 320 || character == 322 || character == 324 || character == 326 || character == 328 || character == 331 || character == 333 || character == 335 || character == 337 || character == 339 || character == 341 || character == 343 || character == 345 || character == 347 || character == 349 || character == 351 || character == 353 || character == 355 || character == 357 || character == 359 || character == 361 || character == 363 || character == 365 || character == 367 || character == 369 || character == 371 || character == 373 || character == 375 || character == 378 || character == 380 || character == 382 || character == 387 || character == 389 || character == 392 || character == 396 || character == 402 || character == 409 || character == 417 || character == 419 || character == 421 || character == 424 || character == 429 || character == 432 || character == 436 || character == 438 || character == 441 || character == 445 || character == 453 || character == 456 || character == 459 || character == 462 || character == 464 || character == 466 || character == 468 || character == 470 || character == 472 || character == 474 || character == 476 || character == 479 || character == 481 || character == 483 || character == 485 || character == 487 || character == 489 || character == 491 || character == 493 || character == 495 || character == 498 || character == 501 || character == 505 || character == 507 || character == 509 || character == 511 || character == 513 || character == 515 || character == 517 || character == 519 || character == 521 || character == 523 || character == 525 || character == 527 || character == 529 || character == 531 || character == 533 || character == 535 || character == 537 || character == 539 || character == 541 || character == 543 || character == 547 || character == 549 || character == 551 || character == 553 || character == 555 || character == 557 || character == 559 || character == 561 || character == 563 || character == 572 || character == 578 || character == 583 || character == 585 || character == 587 || character == 589 || character == 591 || character == 881 || character == 883 || character == 887 || character == 985 || character == 987 || character == 989 || character == 991 || character == 993 || character == 995 || character == 997 || character == 999 || character == 1001 || character == 1003 || character == 1005 || character == 1007 || character == 1016 || character == 1019 || character == 1121 || character == 1123 || character == 1125 || character == 1127 || character == 1129 || character == 1131 || character == 1133 || character == 1135 || character == 1137 || character == 1139 || character == 1141 || character == 1143 || character == 1145 || character == 1147 || character == 1149 || character == 1151 || character == 1153 || character == 1163 || character == 1165 || character == 1167 || character == 1169 || character == 1171 || character == 1173 || character == 1175 || character == 1177 || character == 1179 || character == 1181 || character == 1183 || character == 1185 || character == 1187 || character == 1189 || character == 1191 || character == 1193 || character == 1195 || character == 1197 || character == 1199 || character == 1201 || character == 1203 || character == 1205 || character == 1207 || character == 1209 || character == 1211 || character == 1213 || character == 1215 || character == 1218 || character == 1220 || character == 1222 || character == 1224 || character == 1226 || character == 1228 || character == 1230 || character == 1233 || character == 1235 || character == 1237 || character == 1239 || character == 1241 || character == 1243 || character == 1245 || character == 1247 || character == 1249 || character == 1251 || character == 1253 || character == 1255 || character == 1257 || character == 1259 || character == 1261 || character == 1263 || character == 1265 || character == 1267 || character == 1269 || character == 1271 || character == 1273 || character == 1275 || character == 1277 || character == 1279 || character == 1281 || character == 1283 || character == 1285 || character == 1287 || character == 1289 || character == 1291 || character == 1293 || character == 1295 || character == 1297 || character == 1299 || character == 1301 || character == 1303 || character == 1305 || character == 1307 || character == 1309 || character == 1311 || character == 1313 || character == 1315 || character == 1317 || character == 1319 || character == 1321 || character == 1323 || character == 1325 || character == 1327 || character == 7681 || character == 7683 || character == 7685 || character == 7687 || character == 7689 || character == 7691 || character == 7693 || character == 7695 || character == 7697 || character == 7699 || character == 7701 || character == 7703 || character == 7705 || character == 7707 || character == 7709 || character == 7711 || character == 7713 || character == 7715 || character == 7717 || character == 7719 || character == 7721 || character == 7723 || character == 7725 || character == 7727 || character == 7729 || character == 7731 || character == 7733 || character == 7735 || character == 7737 || character == 7739 || character == 7741 || character == 7743 || character == 7745 || character == 7747 || character == 7749 || character == 7751 || character == 7753 || character == 7755 || character == 7757 || character == 7759 || character == 7761 || character == 7763 || character == 7765 || character == 7767 || character == 7769 || character == 7771 || character == 7773 || character == 7775 || character == 7777 || character == 7779 || character == 7781 || character == 7783 || character == 7785 || character == 7787 || character == 7789 || character == 7791 || character == 7793 || character == 7795 || character == 7797 || character == 7799 || character == 7801 || character == 7803 || character == 7805 || character == 7807 || character == 7809 || character == 7811 || character == 7813 || character == 7815 || character == 7817 || character == 7819 || character == 7821 || character == 7823 || character == 7825 || character == 7827 || character == 7829 || character == 7841 || character == 7843 || character == 7845 || character == 7847 || character == 7849 || character == 7851 || character == 7853 || character == 7855 || character == 7857 || character == 7859 || character == 7861 || character == 7863 || character == 7865 || character == 7867 || character == 7869 || character == 7871 || character == 7873 || character == 7875 || character == 7877 || character == 7879 || character == 7881 || character == 7883 || character == 7885 || character == 7887 || character == 7889 || character == 7891 || character == 7893 || character == 7895 || character == 7897 || character == 7899 || character == 7901 || character == 7903 || character == 7905 || character == 7907 || character == 7909 || character == 7911 || character == 7913 || character == 7915 || character == 7917 || character == 7919 || character == 7921 || character == 7923 || character == 7925 || character == 7927 || character == 7929 || character == 7931 || character == 7933 || character == 7935 || character == 8580 || character == 11361 || character == 11368 || character == 11370 || character == 11372 || character == 11379 || character == 11382 || character == 11393 || character == 11395 || character == 11397 || character == 11399 || character == 11401 || character == 11403 || character == 11405 || character == 11407 || character == 11409 || character == 11411 || character == 11413 || character == 11415 || character == 11417 || character == 11419 || character == 11421 || character == 11423 || character == 11425 || character == 11427 || character == 11429 || character == 11431 || character == 11433 || character == 11435 || character == 11437 || character == 11439 || character == 11441 || character == 11443 || character == 11445 || character == 11447 || character == 11449 || character == 11451 || character == 11453 || character == 11455 || character == 11457 || character == 11459 || character == 11461 || character == 11463 || character == 11465 || character == 11467 || character == 11469 || character == 11471 || character == 11473 || character == 11475 || character == 11477 || character == 11479 || character == 11481 || character == 11483 || character == 11485 || character == 11487 || character == 11489 || character == 11491 || character == 11500 || character == 11502 || character == 11507 || character == 42561 || character == 42563 || character == 42565 || character == 42567 || character == 42569 || character == 42571 || character == 42573 || character == 42575 || character == 42577 || character == 42579 || character == 42581 || character == 42583 || character == 42585 || character == 42587 || character == 42589 || character == 42591 || character == 42593 || character == 42595 || character == 42597 || character == 42599 || character == 42601 || character == 42603 || character == 42605 || character == 42625 || character == 42627 || character == 42629 || character == 42631 || character == 42633 || character == 42635 || character == 42637 || character == 42639 || character == 42641 || character == 42643 || character == 42645 || character == 42647 || character == 42649 || character == 42651 || character == 42787 || character == 42789 || character == 42791 || character == 42793 || character == 42795 || character == 42797 || character == 42799 || character == 42803 || character == 42805 || character == 42807 || character == 42809 || character == 42811 || character == 42813 || character == 42815 || character == 42817 || character == 42819 || character == 42821 || character == 42823 || character == 42825 || character == 42827 || character == 42829 || character == 42831 || character == 42833 || character == 42835 || character == 42837 || character == 42839 || character == 42841 || character == 42843 || character == 42845 || character == 42847 || character == 42849 || character == 42851 || character == 42853 || character == 42855 || character == 42857 || character == 42859 || character == 42861 || character == 42863 || character == 42874 || character == 42876 || character == 42879 || character == 42881 || character == 42883 || character == 42885 || character == 42887 || character == 42892 || character == 42897 || character == 42899 || character == 42903 || character == 42905 || character == 42907 || character == 42909 || character == 42911 || character == 42913 || character == 42915 || character == 42917 || character == 42919 || character == 42921 || character == 42933 || character == 42935 || character == 42937 || character == 42939 || character == 42941 || character == 42943 || character == 42947 || character == 42952 || character == 42954 || character == 42998 || false) { return ord(character) + -1; }if (character == 305 || false) { return ord(character) + -232; }if (character == 383 || false) { return ord(character) + -300; }if (character == 384 || false) { return ord(character) + 195; }if (character == 405 || false) { return ord(character) + 97; }if (character == 410 || false) { return ord(character) + 163; }if (character == 414 || 891 <= character && character <= 893 || false) { return ord(character) + 130; }if (character == 447 || false) { return ord(character) + 56; }if (character == 454 || character == 457 || character == 460 || character == 499 || false) { return ord(character) + -2; }if (character == 477 || false) { return ord(character) + -79; }if (575 <= character && character <= 576 || false) { return ord(character) + 10815; }if (character == 592 || false) { return ord(character) + 10783; }if (character == 593 || false) { return ord(character) + 10780; }if (character == 594 || false) { return ord(character) + 10782; }if (character == 595 || false) { return ord(character) + -210; }if (character == 596 || false) { return ord(character) + -206; }if (598 <= character && character <= 599 || character == 608 || false) { return ord(character) + -205; }if (character == 601 || false) { return ord(character) + -202; }if (character == 603 || false) { return ord(character) + -203; }if (character == 604 || false) { return ord(character) + 42319; }if (character == 609 || false) { return ord(character) + 42315; }if (character == 611 || false) { return ord(character) + -207; }if (character == 613 || false) { return ord(character) + 42280; }if (character == 614 || character == 618 || false) { return ord(character) + 42308; }if (character == 616 || false) { return ord(character) + -209; }if (character == 617 || character == 623 || false) { return ord(character) + -211; }if (character == 619 || false) { return ord(character) + 10743; }if (character == 620 || false) { return ord(character) + 42305; }if (character == 625 || false) { return ord(character) + 10749; }if (character == 626 || false) { return ord(character) + -213; }if (character == 629 || false) { return ord(character) + -214; }if (character == 637 || false) { return ord(character) + 10727; }if (character == 640 || character == 643 || character == 648 || false) { return ord(character) + -218; }if (character == 642 || false) { return ord(character) + 42307; }if (character == 647 || false) { return ord(character) + 42282; }if (character == 649 || false) { return ord(character) + -69; }if (650 <= character && character <= 651 || false) { return ord(character) + -217; }if (character == 652 || false) { return ord(character) + -71; }if (character == 658 || false) { return ord(character) + -219; }if (character == 669 || false) { return ord(character) + 42261; }if (character == 670 || false) { return ord(character) + 42258; }if (character == 837 || false) { return ord(character) + 84; }if (character == 940 || false) { return ord(character) + -38; }if (941 <= character && character <= 943 || false) { return ord(character) + -37; }if (character == 962 || false) { return ord(character) + -31; }if (character == 972 || 68800 <= character && character <= 68850 || false) { return ord(character) + -64; }if (973 <= character && character <= 974 || false) { return ord(character) + -63; }if (character == 976 || false) { return ord(character) + -62; }if (character == 977 || false) { return ord(character) + -57; }if (character == 981 || false) { return ord(character) + -47; }if (character == 982 || false) { return ord(character) + -54; }if (character == 983 || 5112 <= character && character <= 5117 || false) { return ord(character) + -8; }if (character == 1008 || false) { return ord(character) + -86; }if (character == 1009 || 1104 <= character && character <= 1119 || false) { return ord(character) + -80; }if (character == 1010 || character == 8165 || false) { return ord(character) + 7; }if (character == 1011 || false) { return ord(character) + -116; }if (character == 1013 || false) { return ord(character) + -96; }if (character == 1231 || false) { return ord(character) + -15; }if (1377 <= character && character <= 1414 || 11312 <= character && character <= 11358 || false) { return ord(character) + -48; }if (4304 <= character && character <= 4346 || 4349 <= character && character <= 4351 || false) { return ord(character) + 3008; }if (character == 7296 || false) { return ord(character) + -6254; }if (character == 7297 || false) { return ord(character) + -6253; }if (character == 7298 || false) { return ord(character) + -6244; }if (7299 <= character && character <= 7300 || false) { return ord(character) + -6242; }if (character == 7301 || false) { return ord(character) + -6243; }if (character == 7302 || false) { return ord(character) + -6236; }if (character == 7303 || false) { return ord(character) + -6181; }if (character == 7304 || false) { return ord(character) + 35266; }if (character == 7545 || false) { return ord(character) + 35332; }if (character == 7549 || false) { return ord(character) + 3814; }if (character == 7566 || false) { return ord(character) + 35384; }if (character == 7835 || false) { return ord(character) + -59; }if (7936 <= character && character <= 7943 || 7952 <= character && character <= 7957 || 7968 <= character && character <= 7975 || 7984 <= character && character <= 7991 || 8000 <= character && character <= 8005 || character == 8017 || character == 8019 || character == 8021 || character == 8023 || 8032 <= character && character <= 8039 || 8112 <= character && character <= 8113 || 8144 <= character && character <= 8145 || 8160 <= character && character <= 8161 || false) { return ord(character) + 8; }if (8048 <= character && character <= 8049 || false) { return ord(character) + 74; }if (8050 <= character && character <= 8053 || false) { return ord(character) + 86; }if (8054 <= character && character <= 8055 || false) { return ord(character) + 100; }if (8056 <= character && character <= 8057 || false) { return ord(character) + 128; }if (8058 <= character && character <= 8059 || false) { return ord(character) + 112; }if (8060 <= character && character <= 8061 || false) { return ord(character) + 126; }if (character == 8126 || false) { return ord(character) + -7205; }if (character == 8526 || false) { return ord(character) + -28; }if (8560 <= character && character <= 8575 || false) { return ord(character) + -16; }if (9424 <= character && character <= 9449 || false) { return ord(character) + -26; }if (character == 11365 || false) { return ord(character) + -10795; }if (character == 11366 || false) { return ord(character) + -10792; }if (11520 <= character && character <= 11557 || character == 11559 || character == 11565 || false) { return ord(character) + -7264; }if (character == 42900 || false) { return ord(character) + 48; }if (character == 43859 || false) { return ord(character) + -928; }if (43888 <= character && character <= 43967 || false) { return ord(character) + -38864; }if (66600 <= character && character <= 66639 || 66776 <= character && character <= 66811 || false) { return ord(character) + -40; }if (125218 <= character && character <= 125251 || false) { return ord(character) + -34; }
+		return character;
+	}
+	pystr pystr::casefoldChar() const {
+		pystr character = (*this)[0];
+		if (character == 223) { return "ss"; }if (character == 304) { return "i̇"; }if (character == 329) { return "ʼn"; }if (character == 496) { return "ǰ"; }if (character == 912) { return "ΐ"; }if (character == 944) { return "ΰ"; }if (character == 1415) { return "եւ"; }if (character == 7830) { return "ẖ"; }if (character == 7831) { return "ẗ"; }if (character == 7832) { return "ẘ"; }if (character == 7833) { return "ẙ"; }if (character == 7834) { return "aʾ"; }if (character == 7838) { return "ss"; }if (character == 8016) { return "ὐ"; }if (character == 8018) { return "ὒ"; }if (character == 8020) { return "ὔ"; }if (character == 8022) { return "ὖ"; }if (character == 8064) { return "ἀι"; }if (character == 8065) { return "ἁι"; }if (character == 8066) { return "ἂι"; }if (character == 8067) { return "ἃι"; }if (character == 8068) { return "ἄι"; }if (character == 8069) { return "ἅι"; }if (character == 8070) { return "ἆι"; }if (character == 8071) { return "ἇι"; }if (character == 8072) { return "ἀι"; }if (character == 8073) { return "ἁι"; }if (character == 8074) { return "ἂι"; }if (character == 8075) { return "ἃι"; }if (character == 8076) { return "ἄι"; }if (character == 8077) { return "ἅι"; }if (character == 8078) { return "ἆι"; }if (character == 8079) { return "ἇι"; }if (character == 8080) { return "ἠι"; }if (character == 8081) { return "ἡι"; }if (character == 8082) { return "ἢι"; }if (character == 8083) { return "ἣι"; }if (character == 8084) { return "ἤι"; }if (character == 8085) { return "ἥι"; }if (character == 8086) { return "ἦι"; }if (character == 8087) { return "ἧι"; }if (character == 8088) { return "ἠι"; }if (character == 8089) { return "ἡι"; }if (character == 8090) { return "ἢι"; }if (character == 8091) { return "ἣι"; }if (character == 8092) { return "ἤι"; }if (character == 8093) { return "ἥι"; }if (character == 8094) { return "ἦι"; }if (character == 8095) { return "ἧι"; }if (character == 8096) { return "ὠι"; }if (character == 8097) { return "ὡι"; }if (character == 8098) { return "ὢι"; }if (character == 8099) { return "ὣι"; }if (character == 8100) { return "ὤι"; }if (character == 8101) { return "ὥι"; }if (character == 8102) { return "ὦι"; }if (character == 8103) { return "ὧι"; }if (character == 8104) { return "ὠι"; }if (character == 8105) { return "ὡι"; }if (character == 8106) { return "ὢι"; }if (character == 8107) { return "ὣι"; }if (character == 8108) { return "ὤι"; }if (character == 8109) { return "ὥι"; }if (character == 8110) { return "ὦι"; }if (character == 8111) { return "ὧι"; }if (character == 8114) { return "ὰι"; }if (character == 8115) { return "αι"; }if (character == 8116) { return "άι"; }if (character == 8118) { return "ᾶ"; }if (character == 8119) { return "ᾶι"; }if (character == 8124) { return "αι"; }if (character == 8130) { return "ὴι"; }if (character == 8131) { return "ηι"; }if (character == 8132) { return "ήι"; }if (character == 8134) { return "ῆ"; }if (character == 8135) { return "ῆι"; }if (character == 8140) { return "ηι"; }if (character == 8146) { return "ῒ"; }if (character == 8147) { return "ΐ"; }if (character == 8150) { return "ῖ"; }if (character == 8151) { return "ῗ"; }if (character == 8162) { return "ῢ"; }if (character == 8163) { return "ΰ"; }if (character == 8164) { return "ῤ"; }if (character == 8166) { return "ῦ"; }if (character == 8167) { return "ῧ"; }if (character == 8178) { return "ὼι"; }if (character == 8179) { return "ωι"; }if (character == 8180) { return "ώι"; }if (character == 8182) { return "ῶ"; }if (character == 8183) { return "ῶι"; }if (character == 8188) { return "ωι"; }if (character == 64256) { return "ff"; }if (character == 64257) { return "fi"; }if (character == 64258) { return "fl"; }if (character == 64259) { return "ffi"; }if (character == 64260) { return "ffl"; }if (character == 64261) { return "st"; }if (character == 64262) { return "st"; }if (character == 64275) { return "մն"; }if (character == 64276) { return "մե"; }if (character == 64277) { return "մի"; }if (character == 64278) { return "վն"; }if (character == 64279) { return "մխ"; }if (65 <= character && character <= 90 || 192 <= character && character <= 214 || 216 <= character && character <= 222 || 913 <= character && character <= 929 || 931 <= character && character <= 939 || 1040 <= character && character <= 1071 || 65313 <= character && character <= 65338 || 71840 <= character && character <= 71871 || 93760 <= character && character <= 93791 || false) { return ord(character) + 32; }if (character == 181 || false) { return ord(character) + 775; }if (character == 256 || character == 258 || character == 260 || character == 262 || character == 264 || character == 266 || character == 268 || character == 270 || character == 272 || character == 274 || character == 276 || character == 278 || character == 280 || character == 282 || character == 284 || character == 286 || character == 288 || character == 290 || character == 292 || character == 294 || character == 296 || character == 298 || character == 300 || character == 302 || character == 306 || character == 308 || character == 310 || character == 313 || character == 315 || character == 317 || character == 319 || character == 321 || character == 323 || character == 325 || character == 327 || character == 330 || character == 332 || character == 334 || character == 336 || character == 338 || character == 340 || character == 342 || character == 344 || character == 346 || character == 348 || character == 350 || character == 352 || character == 354 || character == 356 || character == 358 || character == 360 || character == 362 || character == 364 || character == 366 || character == 368 || character == 370 || character == 372 || character == 374 || character == 377 || character == 379 || character == 381 || character == 386 || character == 388 || character == 391 || character == 395 || character == 401 || character == 408 || character == 416 || character == 418 || character == 420 || character == 423 || character == 428 || character == 431 || character == 435 || character == 437 || character == 440 || character == 444 || character == 453 || character == 456 || character == 459 || character == 461 || character == 463 || character == 465 || character == 467 || character == 469 || character == 471 || character == 473 || character == 475 || character == 478 || character == 480 || character == 482 || character == 484 || character == 486 || character == 488 || character == 490 || character == 492 || character == 494 || character == 498 || character == 500 || character == 504 || character == 506 || character == 508 || character == 510 || character == 512 || character == 514 || character == 516 || character == 518 || character == 520 || character == 522 || character == 524 || character == 526 || character == 528 || character == 530 || character == 532 || character == 534 || character == 536 || character == 538 || character == 540 || character == 542 || character == 546 || character == 548 || character == 550 || character == 552 || character == 554 || character == 556 || character == 558 || character == 560 || character == 562 || character == 571 || character == 577 || character == 582 || character == 584 || character == 586 || character == 588 || character == 590 || character == 880 || character == 882 || character == 886 || character == 962 || character == 984 || character == 986 || character == 988 || character == 990 || character == 992 || character == 994 || character == 996 || character == 998 || character == 1000 || character == 1002 || character == 1004 || character == 1006 || character == 1015 || character == 1018 || character == 1120 || character == 1122 || character == 1124 || character == 1126 || character == 1128 || character == 1130 || character == 1132 || character == 1134 || character == 1136 || character == 1138 || character == 1140 || character == 1142 || character == 1144 || character == 1146 || character == 1148 || character == 1150 || character == 1152 || character == 1162 || character == 1164 || character == 1166 || character == 1168 || character == 1170 || character == 1172 || character == 1174 || character == 1176 || character == 1178 || character == 1180 || character == 1182 || character == 1184 || character == 1186 || character == 1188 || character == 1190 || character == 1192 || character == 1194 || character == 1196 || character == 1198 || character == 1200 || character == 1202 || character == 1204 || character == 1206 || character == 1208 || character == 1210 || character == 1212 || character == 1214 || character == 1217 || character == 1219 || character == 1221 || character == 1223 || character == 1225 || character == 1227 || character == 1229 || character == 1232 || character == 1234 || character == 1236 || character == 1238 || character == 1240 || character == 1242 || character == 1244 || character == 1246 || character == 1248 || character == 1250 || character == 1252 || character == 1254 || character == 1256 || character == 1258 || character == 1260 || character == 1262 || character == 1264 || character == 1266 || character == 1268 || character == 1270 || character == 1272 || character == 1274 || character == 1276 || character == 1278 || character == 1280 || character == 1282 || character == 1284 || character == 1286 || character == 1288 || character == 1290 || character == 1292 || character == 1294 || character == 1296 || character == 1298 || character == 1300 || character == 1302 || character == 1304 || character == 1306 || character == 1308 || character == 1310 || character == 1312 || character == 1314 || character == 1316 || character == 1318 || character == 1320 || character == 1322 || character == 1324 || character == 1326 || character == 7680 || character == 7682 || character == 7684 || character == 7686 || character == 7688 || character == 7690 || character == 7692 || character == 7694 || character == 7696 || character == 7698 || character == 7700 || character == 7702 || character == 7704 || character == 7706 || character == 7708 || character == 7710 || character == 7712 || character == 7714 || character == 7716 || character == 7718 || character == 7720 || character == 7722 || character == 7724 || character == 7726 || character == 7728 || character == 7730 || character == 7732 || character == 7734 || character == 7736 || character == 7738 || character == 7740 || character == 7742 || character == 7744 || character == 7746 || character == 7748 || character == 7750 || character == 7752 || character == 7754 || character == 7756 || character == 7758 || character == 7760 || character == 7762 || character == 7764 || character == 7766 || character == 7768 || character == 7770 || character == 7772 || character == 7774 || character == 7776 || character == 7778 || character == 7780 || character == 7782 || character == 7784 || character == 7786 || character == 7788 || character == 7790 || character == 7792 || character == 7794 || character == 7796 || character == 7798 || character == 7800 || character == 7802 || character == 7804 || character == 7806 || character == 7808 || character == 7810 || character == 7812 || character == 7814 || character == 7816 || character == 7818 || character == 7820 || character == 7822 || character == 7824 || character == 7826 || character == 7828 || character == 7840 || character == 7842 || character == 7844 || character == 7846 || character == 7848 || character == 7850 || character == 7852 || character == 7854 || character == 7856 || character == 7858 || character == 7860 || character == 7862 || character == 7864 || character == 7866 || character == 7868 || character == 7870 || character == 7872 || character == 7874 || character == 7876 || character == 7878 || character == 7880 || character == 7882 || character == 7884 || character == 7886 || character == 7888 || character == 7890 || character == 7892 || character == 7894 || character == 7896 || character == 7898 || character == 7900 || character == 7902 || character == 7904 || character == 7906 || character == 7908 || character == 7910 || character == 7912 || character == 7914 || character == 7916 || character == 7918 || character == 7920 || character == 7922 || character == 7924 || character == 7926 || character == 7928 || character == 7930 || character == 7932 || character == 7934 || character == 8579 || character == 11360 || character == 11367 || character == 11369 || character == 11371 || character == 11378 || character == 11381 || character == 11392 || character == 11394 || character == 11396 || character == 11398 || character == 11400 || character == 11402 || character == 11404 || character == 11406 || character == 11408 || character == 11410 || character == 11412 || character == 11414 || character == 11416 || character == 11418 || character == 11420 || character == 11422 || character == 11424 || character == 11426 || character == 11428 || character == 11430 || character == 11432 || character == 11434 || character == 11436 || character == 11438 || character == 11440 || character == 11442 || character == 11444 || character == 11446 || character == 11448 || character == 11450 || character == 11452 || character == 11454 || character == 11456 || character == 11458 || character == 11460 || character == 11462 || character == 11464 || character == 11466 || character == 11468 || character == 11470 || character == 11472 || character == 11474 || character == 11476 || character == 11478 || character == 11480 || character == 11482 || character == 11484 || character == 11486 || character == 11488 || character == 11490 || character == 11499 || character == 11501 || character == 11506 || character == 42560 || character == 42562 || character == 42564 || character == 42566 || character == 42568 || character == 42570 || character == 42572 || character == 42574 || character == 42576 || character == 42578 || character == 42580 || character == 42582 || character == 42584 || character == 42586 || character == 42588 || character == 42590 || character == 42592 || character == 42594 || character == 42596 || character == 42598 || character == 42600 || character == 42602 || character == 42604 || character == 42624 || character == 42626 || character == 42628 || character == 42630 || character == 42632 || character == 42634 || character == 42636 || character == 42638 || character == 42640 || character == 42642 || character == 42644 || character == 42646 || character == 42648 || character == 42650 || character == 42786 || character == 42788 || character == 42790 || character == 42792 || character == 42794 || character == 42796 || character == 42798 || character == 42802 || character == 42804 || character == 42806 || character == 42808 || character == 42810 || character == 42812 || character == 42814 || character == 42816 || character == 42818 || character == 42820 || character == 42822 || character == 42824 || character == 42826 || character == 42828 || character == 42830 || character == 42832 || character == 42834 || character == 42836 || character == 42838 || character == 42840 || character == 42842 || character == 42844 || character == 42846 || character == 42848 || character == 42850 || character == 42852 || character == 42854 || character == 42856 || character == 42858 || character == 42860 || character == 42862 || character == 42873 || character == 42875 || character == 42878 || character == 42880 || character == 42882 || character == 42884 || character == 42886 || character == 42891 || character == 42896 || character == 42898 || character == 42902 || character == 42904 || character == 42906 || character == 42908 || character == 42910 || character == 42912 || character == 42914 || character == 42916 || character == 42918 || character == 42920 || character == 42932 || character == 42934 || character == 42936 || character == 42938 || character == 42940 || character == 42942 || character == 42946 || character == 42951 || character == 42953 || character == 42997 || false) { return ord(character) + 1; }if (character == 376 || false) { return ord(character) + -121; }if (character == 383 || false) { return ord(character) + -268; }if (character == 385 || false) { return ord(character) + 210; }if (character == 390 || false) { return ord(character) + 206; }if (393 <= character && character <= 394 || character == 403 || false) { return ord(character) + 205; }if (character == 398 || false) { return ord(character) + 79; }if (character == 399 || false) { return ord(character) + 202; }if (character == 400 || false) { return ord(character) + 203; }if (character == 404 || false) { return ord(character) + 207; }if (character == 406 || character == 412 || false) { return ord(character) + 211; }if (character == 407 || false) { return ord(character) + 209; }if (character == 413 || false) { return ord(character) + 213; }if (character == 415 || false) { return ord(character) + 214; }if (character == 422 || character == 425 || character == 430 || false) { return ord(character) + 218; }if (433 <= character && character <= 434 || false) { return ord(character) + 217; }if (character == 439 || false) { return ord(character) + 219; }if (character == 452 || character == 455 || character == 458 || character == 497 || false) { return ord(character) + 2; }if (character == 502 || false) { return ord(character) + -97; }if (character == 503 || false) { return ord(character) + -56; }if (character == 544 || 1021 <= character && character <= 1023 || false) { return ord(character) + -130; }if (character == 570 || false) { return ord(character) + 10795; }if (character == 573 || false) { return ord(character) + -163; }if (character == 574 || false) { return ord(character) + 10792; }if (character == 579 || false) { return ord(character) + -195; }if (character == 580 || false) { return ord(character) + 69; }if (character == 581 || false) { return ord(character) + 71; }if (character == 837 || character == 895 || false) { return ord(character) + 116; }if (character == 902 || false) { return ord(character) + 38; }if (904 <= character && character <= 906 || false) { return ord(character) + 37; }if (character == 908 || 68736 <= character && character <= 68786 || false) { return ord(character) + 64; }if (910 <= character && character <= 911 || false) { return ord(character) + 63; }if (character == 975 || false) { return ord(character) + 8; }if (character == 976 || false) { return ord(character) + -30; }if (character == 977 || false) { return ord(character) + -25; }if (character == 981 || false) { return ord(character) + -15; }if (character == 982 || false) { return ord(character) + -22; }if (character == 1008 || false) { return ord(character) + -54; }if (character == 1009 || character == 42948 || false) { return ord(character) + -48; }if (character == 1012 || false) { return ord(character) + -60; }if (character == 1013 || false) { return ord(character) + -64; }if (character == 1017 || character == 8172 || false) { return ord(character) + -7; }if (1024 <= character && character <= 1039 || false) { return ord(character) + 80; }if (character == 1216 || false) { return ord(character) + 15; }if (1329 <= character && character <= 1366 || 11264 <= character && character <= 11310 || false) { return ord(character) + 48; }if (4256 <= character && character <= 4293 || character == 4295 || character == 4301 || false) { return ord(character) + 7264; }if (5112 <= character && character <= 5117 || 7944 <= character && character <= 7951 || 7960 <= character && character <= 7965 || 7976 <= character && character <= 7983 || 7992 <= character && character <= 7999 || 8008 <= character && character <= 8013 || character == 8025 || character == 8027 || character == 8029 || character == 8031 || 8040 <= character && character <= 8047 || 8120 <= character && character <= 8121 || 8152 <= character && character <= 8153 || 8168 <= character && character <= 8169 || false) { return ord(character) + -8; }if (character == 7296 || false) { return ord(character) + -6222; }if (character == 7297 || false) { return ord(character) + -6221; }if (character == 7298 || false) { return ord(character) + -6212; }if (7299 <= character && character <= 7300 || false) { return ord(character) + -6210; }if (character == 7301 || false) { return ord(character) + -6211; }if (character == 7302 || false) { return ord(character) + -6204; }if (character == 7303 || false) { return ord(character) + -6180; }if (character == 7304 || false) { return ord(character) + 35267; }if (7312 <= character && character <= 7354 || 7357 <= character && character <= 7359 || false) { return ord(character) + -3008; }if (character == 7835 || false) { return ord(character) + -58; }if (8122 <= character && character <= 8123 || false) { return ord(character) + -74; }if (character == 8126 || false) { return ord(character) + -7173; }if (8136 <= character && character <= 8139 || false) { return ord(character) + -86; }if (8154 <= character && character <= 8155 || false) { return ord(character) + -100; }if (8170 <= character && character <= 8171 || false) { return ord(character) + -112; }if (8184 <= character && character <= 8185 || false) { return ord(character) + -128; }if (8186 <= character && character <= 8187 || false) { return ord(character) + -126; }if (character == 8486 || false) { return ord(character) + -7517; }if (character == 8490 || false) { return ord(character) + -8383; }if (character == 8491 || false) { return ord(character) + -8262; }if (character == 8498 || false) { return ord(character) + 28; }if (8544 <= character && character <= 8559 || false) { return ord(character) + 16; }if (9398 <= character && character <= 9423 || false) { return ord(character) + 26; }if (character == 11362 || false) { return ord(character) + -10743; }if (character == 11363 || false) { return ord(character) + -3814; }if (character == 11364 || false) { return ord(character) + -10727; }if (character == 11373 || false) { return ord(character) + -10780; }if (character == 11374 || false) { return ord(character) + -10749; }if (character == 11375 || false) { return ord(character) + -10783; }if (character == 11376 || false) { return ord(character) + -10782; }if (11390 <= character && character <= 11391 || false) { return ord(character) + -10815; }if (character == 42877 || false) { return ord(character) + -35332; }if (character == 42893 || false) { return ord(character) + -42280; }if (character == 42922 || character == 42926 || false) { return ord(character) + -42308; }if (character == 42923 || false) { return ord(character) + -42319; }if (character == 42924 || false) { return ord(character) + -42315; }if (character == 42925 || false) { return ord(character) + -42305; }if (character == 42928 || false) { return ord(character) + -42258; }if (character == 42929 || false) { return ord(character) + -42282; }if (character == 42930 || false) { return ord(character) + -42261; }if (character == 42931 || false) { return ord(character) + 928; }if (character == 42949 || false) { return ord(character) + -42307; }if (character == 42950 || false) { return ord(character) + -35384; }if (43888 <= character && character <= 43967 || false) { return ord(character) + -38864; }if (66560 <= character && character <= 66599 || 66736 <= character && character <= 66771 || false) { return ord(character) + 40; }if (125184 <= character && character <= 125217 || false) { return ord(character) + 34; }
+		return character;
+	}
+#pragma warning(pop)
+	bool pystr::isCharAlnum() const {
+		pystr character = (*this)[0];
+		if (48 <= character && character <= 57 || 65 <= character && character <= 90 || 97 <= character && character <= 122 || character == 170 || 178 <= character && character <= 179 || character == 181 || 185 <= character && character <= 186 || 188 <= character && character <= 190 || 192 <= character && character <= 214 || 216 <= character && character <= 246 || 248 <= character && character <= 705 || 710 <= character && character <= 721 || 736 <= character && character <= 740 || character == 748 || character == 750 || 880 <= character && character <= 884 || 886 <= character && character <= 887 || 890 <= character && character <= 893 || character == 895 || character == 902 || 904 <= character && character <= 906 || character == 908 || 910 <= character && character <= 929 || 931 <= character && character <= 1013 || 1015 <= character && character <= 1153 || 1162 <= character && character <= 1327 || 1329 <= character && character <= 1366 || character == 1369 || 1376 <= character && character <= 1416 || 1488 <= character && character <= 1514 || 1519 <= character && character <= 1522 || 1568 <= character && character <= 1610 || 1632 <= character && character <= 1641 || 1646 <= character && character <= 1647 || 1649 <= character && character <= 1747 || character == 1749 || 1765 <= character && character <= 1766 || 1774 <= character && character <= 1788 || character == 1791 || character == 1808 || 1810 <= character && character <= 1839 || 1869 <= character && character <= 1957 || character == 1969 || 1984 <= character && character <= 2026 || 2036 <= character && character <= 2037 || character == 2042 || 2048 <= character && character <= 2069 || character == 2074 || character == 2084 || character == 2088 || 2112 <= character && character <= 2136 || 2144 <= character && character <= 2154 || 2208 <= character && character <= 2228 || 2230 <= character && character <= 2247 || 2308 <= character && character <= 2361 || character == 2365 || character == 2384 || 2392 <= character && character <= 2401 || 2406 <= character && character <= 2415 || 2417 <= character && character <= 2432 || 2437 <= character && character <= 2444 || 2447 <= character && character <= 2448 || 2451 <= character && character <= 2472 || 2474 <= character && character <= 2480 || character == 2482 || 2486 <= character && character <= 2489 || character == 2493 || character == 2510 || 2524 <= character && character <= 2525 || 2527 <= character && character <= 2529 || 2534 <= character && character <= 2545 || 2548 <= character && character <= 2553 || character == 2556 || 2565 <= character && character <= 2570 || 2575 <= character && character <= 2576 || 2579 <= character && character <= 2600 || 2602 <= character && character <= 2608 || 2610 <= character && character <= 2611 || 2613 <= character && character <= 2614 || 2616 <= character && character <= 2617 || 2649 <= character && character <= 2652 || character == 2654 || 2662 <= character && character <= 2671 || 2674 <= character && character <= 2676 || 2693 <= character && character <= 2701 || 2703 <= character && character <= 2705 || 2707 <= character && character <= 2728 || 2730 <= character && character <= 2736 || 2738 <= character && character <= 2739 || 2741 <= character && character <= 2745 || character == 2749 || character == 2768 || 2784 <= character && character <= 2785 || 2790 <= character && character <= 2799 || character == 2809 || 2821 <= character && character <= 2828 || 2831 <= character && character <= 2832 || 2835 <= character && character <= 2856 || 2858 <= character && character <= 2864 || 2866 <= character && character <= 2867 || 2869 <= character && character <= 2873 || character == 2877 || 2908 <= character && character <= 2909 || 2911 <= character && character <= 2913 || 2918 <= character && character <= 2927 || 2929 <= character && character <= 2935 || character == 2947 || 2949 <= character && character <= 2954 || 2958 <= character && character <= 2960 || 2962 <= character && character <= 2965 || 2969 <= character && character <= 2970 || character == 2972 || 2974 <= character && character <= 2975 || 2979 <= character && character <= 2980 || 2984 <= character && character <= 2986 || 2990 <= character && character <= 3001 || character == 3024 || 3046 <= character && character <= 3058 || 3077 <= character && character <= 3084 || 3086 <= character && character <= 3088 || 3090 <= character && character <= 3112 || 3114 <= character && character <= 3129 || character == 3133 || 3160 <= character && character <= 3162 || 3168 <= character && character <= 3169 || 3174 <= character && character <= 3183 || 3192 <= character && character <= 3198 || character == 3200 || 3205 <= character && character <= 3212 || 3214 <= character && character <= 3216 || 3218 <= character && character <= 3240 || 3242 <= character && character <= 3251 || 3253 <= character && character <= 3257 || character == 3261 || character == 3294 || 3296 <= character && character <= 3297 || 3302 <= character && character <= 3311 || 3313 <= character && character <= 3314 || 3332 <= character && character <= 3340 || 3342 <= character && character <= 3344 || 3346 <= character && character <= 3386 || character == 3389 || character == 3406 || 3412 <= character && character <= 3414 || 3416 <= character && character <= 3425 || 3430 <= character && character <= 3448 || 3450 <= character && character <= 3455 || 3461 <= character && character <= 3478 || 3482 <= character && character <= 3505 || 3507 <= character && character <= 3515 || character == 3517 || 3520 <= character && character <= 3526 || 3558 <= character && character <= 3567 || 3585 <= character && character <= 3632 || 3634 <= character && character <= 3635 || 3648 <= character && character <= 3654 || 3664 <= character && character <= 3673 || 3713 <= character && character <= 3714 || character == 3716 || 3718 <= character && character <= 3722 || 3724 <= character && character <= 3747 || character == 3749 || 3751 <= character && character <= 3760 || 3762 <= character && character <= 3763 || character == 3773 || 3776 <= character && character <= 3780 || character == 3782 || 3792 <= character && character <= 3801 || 3804 <= character && character <= 3807 || character == 3840 || 3872 <= character && character <= 3891 || 3904 <= character && character <= 3911 || 3913 <= character && character <= 3948 || 3976 <= character && character <= 3980 || 4096 <= character && character <= 4138 || 4159 <= character && character <= 4169 || 4176 <= character && character <= 4181 || 4186 <= character && character <= 4189 || character == 4193 || 4197 <= character && character <= 4198 || 4206 <= character && character <= 4208 || 4213 <= character && character <= 4225 || character == 4238 || 4240 <= character && character <= 4249 || 4256 <= character && character <= 4293 || character == 4295 || character == 4301 || 4304 <= character && character <= 4346 || 4348 <= character && character <= 4680 || 4682 <= character && character <= 4685 || 4688 <= character && character <= 4694 || character == 4696 || 4698 <= character && character <= 4701 || 4704 <= character && character <= 4744 || 4746 <= character && character <= 4749 || 4752 <= character && character <= 4784 || 4786 <= character && character <= 4789 || 4792 <= character && character <= 4798 || character == 4800 || 4802 <= character && character <= 4805 || 4808 <= character && character <= 4822 || 4824 <= character && character <= 4880 || 4882 <= character && character <= 4885 || 4888 <= character && character <= 4954 || 4969 <= character && character <= 4988 || 4992 <= character && character <= 5007 || 5024 <= character && character <= 5109 || 5112 <= character && character <= 5117 || 5121 <= character && character <= 5740 || 5743 <= character && character <= 5759 || 5761 <= character && character <= 5786 || 5792 <= character && character <= 5866 || 5870 <= character && character <= 5880 || 5888 <= character && character <= 5900 || 5902 <= character && character <= 5905 || 5920 <= character && character <= 5937 || 5952 <= character && character <= 5969 || 5984 <= character && character <= 5996 || 5998 <= character && character <= 6000 || 6016 <= character && character <= 6067 || character == 6103 || character == 6108 || 6112 <= character && character <= 6121 || 6128 <= character && character <= 6137 || 6160 <= character && character <= 6169 || 6176 <= character && character <= 6264 || 6272 <= character && character <= 6276 || 6279 <= character && character <= 6312 || character == 6314 || 6320 <= character && character <= 6389 || 6400 <= character && character <= 6430 || 6470 <= character && character <= 6509 || 6512 <= character && character <= 6516 || 6528 <= character && character <= 6571 || 6576 <= character && character <= 6601 || 6608 <= character && character <= 6618 || 6656 <= character && character <= 6678 || 6688 <= character && character <= 6740 || 6784 <= character && character <= 6793 || 6800 <= character && character <= 6809 || character == 6823 || 6917 <= character && character <= 6963 || 6981 <= character && character <= 6987 || 6992 <= character && character <= 7001 || 7043 <= character && character <= 7072 || 7086 <= character && character <= 7141 || 7168 <= character && character <= 7203 || 7232 <= character && character <= 7241 || 7245 <= character && character <= 7293 || 7296 <= character && character <= 7304 || 7312 <= character && character <= 7354 || 7357 <= character && character <= 7359 || 7401 <= character && character <= 7404 || 7406 <= character && character <= 7411 || 7413 <= character && character <= 7414 || character == 7418 || 7424 <= character && character <= 7615 || 7680 <= character && character <= 7957 || 7960 <= character && character <= 7965 || 7968 <= character && character <= 8005 || 8008 <= character && character <= 8013 || 8016 <= character && character <= 8023 || character == 8025 || character == 8027 || character == 8029 || 8031 <= character && character <= 8061 || 8064 <= character && character <= 8116 || 8118 <= character && character <= 8124 || character == 8126 || 8130 <= character && character <= 8132 || 8134 <= character && character <= 8140 || 8144 <= character && character <= 8147 || 8150 <= character && character <= 8155 || 8160 <= character && character <= 8172 || 8178 <= character && character <= 8180 || 8182 <= character && character <= 8188 || 8304 <= character && character <= 8305 || 8308 <= character && character <= 8313 || 8319 <= character && character <= 8329 || 8336 <= character && character <= 8348 || character == 8450 || character == 8455 || 8458 <= character && character <= 8467 || character == 8469 || 8473 <= character && character <= 8477 || character == 8484 || character == 8486 || character == 8488 || 8490 <= character && character <= 8493 || 8495 <= character && character <= 8505 || 8508 <= character && character <= 8511 || 8517 <= character && character <= 8521 || character == 8526 || 8528 <= character && character <= 8585 || 9312 <= character && character <= 9371 || 9450 <= character && character <= 9471 || 10102 <= character && character <= 10131 || 11264 <= character && character <= 11310 || 11312 <= character && character <= 11358 || 11360 <= character && character <= 11492 || 11499 <= character && character <= 11502 || 11506 <= character && character <= 11507 || character == 11517 || 11520 <= character && character <= 11557 || character == 11559 || character == 11565 || 11568 <= character && character <= 11623 || character == 11631 || 11648 <= character && character <= 11670 || 11680 <= character && character <= 11686 || 11688 <= character && character <= 11694 || 11696 <= character && character <= 11702 || 11704 <= character && character <= 11710 || 11712 <= character && character <= 11718 || 11720 <= character && character <= 11726 || 11728 <= character && character <= 11734 || 11736 <= character && character <= 11742 || character == 11823 || 12293 <= character && character <= 12295 || 12321 <= character && character <= 12329 || 12337 <= character && character <= 12341 || 12344 <= character && character <= 12348 || 12353 <= character && character <= 12438 || 12445 <= character && character <= 12447 || 12449 <= character && character <= 12538 || 12540 <= character && character <= 12543 || 12549 <= character && character <= 12591 || 12593 <= character && character <= 12686 || 12690 <= character && character <= 12693 || 12704 <= character && character <= 12735 || 12784 <= character && character <= 12799 || 12832 <= character && character <= 12841 || 12872 <= character && character <= 12879 || 12881 <= character && character <= 12895 || 12928 <= character && character <= 12937 || 12977 <= character && character <= 12991 || 13312 <= character && character <= 19903 || 19968 <= character && character <= 40956 || 40960 <= character && character <= 42124 || 42192 <= character && character <= 42237 || 42240 <= character && character <= 42508 || 42512 <= character && character <= 42539 || 42560 <= character && character <= 42606 || 42623 <= character && character <= 42653 || 42656 <= character && character <= 42735 || 42775 <= character && character <= 42783 || 42786 <= character && character <= 42888 || 42891 <= character && character <= 42943 || 42946 <= character && character <= 42954 || 42997 <= character && character <= 43009 || 43011 <= character && character <= 43013 || 43015 <= character && character <= 43018 || 43020 <= character && character <= 43042 || 43056 <= character && character <= 43061 || 43072 <= character && character <= 43123 || 43138 <= character && character <= 43187 || 43216 <= character && character <= 43225 || 43250 <= character && character <= 43255 || character == 43259 || 43261 <= character && character <= 43262 || 43264 <= character && character <= 43301 || 43312 <= character && character <= 43334 || 43360 <= character && character <= 43388 || 43396 <= character && character <= 43442 || 43471 <= character && character <= 43481 || 43488 <= character && character <= 43492 || 43494 <= character && character <= 43518 || 43520 <= character && character <= 43560 || 43584 <= character && character <= 43586 || 43588 <= character && character <= 43595 || 43600 <= character && character <= 43609 || 43616 <= character && character <= 43638 || character == 43642 || 43646 <= character && character <= 43695 || character == 43697 || 43701 <= character && character <= 43702 || 43705 <= character && character <= 43709 || character == 43712 || character == 43714 || 43739 <= character && character <= 43741 || 43744 <= character && character <= 43754 || 43762 <= character && character <= 43764 || 43777 <= character && character <= 43782 || 43785 <= character && character <= 43790 || 43793 <= character && character <= 43798 || 43808 <= character && character <= 43814 || 43816 <= character && character <= 43822 || 43824 <= character && character <= 43866 || 43868 <= character && character <= 43881 || 43888 <= character && character <= 44002 || 44016 <= character && character <= 44025 || 44032 <= character && character <= 55203 || 55216 <= character && character <= 55238 || 55243 <= character && character <= 55291 || 63744 <= character && character <= 64109 || 64112 <= character && character <= 64217 || 64256 <= character && character <= 64262 || 64275 <= character && character <= 64279 || character == 64285 || 64287 <= character && character <= 64296 || 64298 <= character && character <= 64310 || 64312 <= character && character <= 64316 || character == 64318 || 64320 <= character && character <= 64321 || 64323 <= character && character <= 64324 || 64326 <= character && character <= 64433 || 64467 <= character && character <= 64829 || 64848 <= character && character <= 64911 || 64914 <= character && character <= 64967 || 65008 <= character && character <= 65019 || 65136 <= character && character <= 65140 || 65142 <= character && character <= 65276 || 65296 <= character && character <= 65305 || 65313 <= character && character <= 65338 || 65345 <= character && character <= 65370 || 65382 <= character && character <= 65470 || 65474 <= character && character <= 65479 || 65482 <= character && character <= 65487 || 65490 <= character && character <= 65495 || 65498 <= character && character <= 65500 || 65536 <= character && character <= 65547 || 65549 <= character && character <= 65574 || 65576 <= character && character <= 65594 || 65596 <= character && character <= 65597 || 65599 <= character && character <= 65613 || 65616 <= character && character <= 65629 || 65664 <= character && character <= 65786 || 65799 <= character && character <= 65843 || 65856 <= character && character <= 65912 || 65930 <= character && character <= 65931 || 66176 <= character && character <= 66204 || 66208 <= character && character <= 66256 || 66273 <= character && character <= 66299 || 66304 <= character && character <= 66339 || 66349 <= character && character <= 66378 || 66384 <= character && character <= 66421 || 66432 <= character && character <= 66461 || 66464 <= character && character <= 66499 || 66504 <= character && character <= 66511 || 66513 <= character && character <= 66517 || 66560 <= character && character <= 66717 || 66720 <= character && character <= 66729 || 66736 <= character && character <= 66771 || 66776 <= character && character <= 66811 || 66816 <= character && character <= 66855 || 66864 <= character && character <= 66915 || 67072 <= character && character <= 67382 || 67392 <= character && character <= 67413 || 67424 <= character && character <= 67431 || 67584 <= character && character <= 67589 || character == 67592 || 67594 <= character && character <= 67637 || 67639 <= character && character <= 67640 || character == 67644 || 67647 <= character && character <= 67669 || 67672 <= character && character <= 67702 || 67705 <= character && character <= 67742 || 67751 <= character && character <= 67759 || 67808 <= character && character <= 67826 || 67828 <= character && character <= 67829 || 67835 <= character && character <= 67867 || 67872 <= character && character <= 67897 || 67968 <= character && character <= 68023 || 68028 <= character && character <= 68047 || 68050 <= character && character <= 68096 || 68112 <= character && character <= 68115 || 68117 <= character && character <= 68119 || 68121 <= character && character <= 68149 || 68160 <= character && character <= 68168 || 68192 <= character && character <= 68222 || 68224 <= character && character <= 68255 || 68288 <= character && character <= 68295 || 68297 <= character && character <= 68324 || 68331 <= character && character <= 68335 || 68352 <= character && character <= 68405 || 68416 <= character && character <= 68437 || 68440 <= character && character <= 68466 || 68472 <= character && character <= 68497 || 68521 <= character && character <= 68527 || 68608 <= character && character <= 68680 || 68736 <= character && character <= 68786 || 68800 <= character && character <= 68850 || 68858 <= character && character <= 68899 || 68912 <= character && character <= 68921 || 69216 <= character && character <= 69246 || 69248 <= character && character <= 69289 || 69296 <= character && character <= 69297 || 69376 <= character && character <= 69415 || 69424 <= character && character <= 69445 || 69457 <= character && character <= 69460 || 69552 <= character && character <= 69579 || 69600 <= character && character <= 69622 || 69635 <= character && character <= 69687 || 69714 <= character && character <= 69743 || 69763 <= character && character <= 69807 || 69840 <= character && character <= 69864 || 69872 <= character && character <= 69881 || 69891 <= character && character <= 69926 || 69942 <= character && character <= 69951 || character == 69956 || character == 69959 || 69968 <= character && character <= 70002 || character == 70006 || 70019 <= character && character <= 70066 || 70081 <= character && character <= 70084 || 70096 <= character && character <= 70106 || character == 70108 || 70113 <= character && character <= 70132 || 70144 <= character && character <= 70161 || 70163 <= character && character <= 70187 || 70272 <= character && character <= 70278 || character == 70280 || 70282 <= character && character <= 70285 || 70287 <= character && character <= 70301 || 70303 <= character && character <= 70312 || 70320 <= character && character <= 70366 || 70384 <= character && character <= 70393 || 70405 <= character && character <= 70412 || 70415 <= character && character <= 70416 || 70419 <= character && character <= 70440 || 70442 <= character && character <= 70448 || 70450 <= character && character <= 70451 || 70453 <= character && character <= 70457 || character == 70461 || character == 70480 || 70493 <= character && character <= 70497 || 70656 <= character && character <= 70708 || 70727 <= character && character <= 70730 || 70736 <= character && character <= 70745 || 70751 <= character && character <= 70753 || 70784 <= character && character <= 70831 || 70852 <= character && character <= 70853 || character == 70855 || 70864 <= character && character <= 70873 || 71040 <= character && character <= 71086 || 71128 <= character && character <= 71131 || 71168 <= character && character <= 71215 || character == 71236 || 71248 <= character && character <= 71257 || 71296 <= character && character <= 71338 || character == 71352 || 71360 <= character && character <= 71369 || 71424 <= character && character <= 71450 || 71472 <= character && character <= 71483 || 71680 <= character && character <= 71723 || 71840 <= character && character <= 71922 || 71935 <= character && character <= 71942 || character == 71945 || 71948 <= character && character <= 71955 || 71957 <= character && character <= 71958 || 71960 <= character && character <= 71983 || character == 71999 || character == 72001 || 72016 <= character && character <= 72025 || 72096 <= character && character <= 72103 || 72106 <= character && character <= 72144 || character == 72161 || character == 72163 || character == 72192 || 72203 <= character && character <= 72242 || character == 72250 || character == 72272 || 72284 <= character && character <= 72329 || character == 72349 || 72384 <= character && character <= 72440 || 72704 <= character && character <= 72712 || 72714 <= character && character <= 72750 || character == 72768 || 72784 <= character && character <= 72812 || 72818 <= character && character <= 72847 || 72960 <= character && character <= 72966 || 72968 <= character && character <= 72969 || 72971 <= character && character <= 73008 || character == 73030 || 73040 <= character && character <= 73049 || 73056 <= character && character <= 73061 || 73063 <= character && character <= 73064 || 73066 <= character && character <= 73097 || character == 73112 || 73120 <= character && character <= 73129 || 73440 <= character && character <= 73458 || character == 73648 || 73664 <= character && character <= 73684 || 73728 <= character && character <= 74649 || 74752 <= character && character <= 74862 || 74880 <= character && character <= 75075 || 77824 <= character && character <= 78894 || 82944 <= character && character <= 83526 || 92160 <= character && character <= 92728 || 92736 <= character && character <= 92766 || 92768 <= character && character <= 92777 || 92880 <= character && character <= 92909 || 92928 <= character && character <= 92975 || 92992 <= character && character <= 92995 || 93008 <= character && character <= 93017 || 93019 <= character && character <= 93025 || 93027 <= character && character <= 93047 || 93053 <= character && character <= 93071 || 93760 <= character && character <= 93846 || 93952 <= character && character <= 94026 || character == 94032 || 94099 <= character && character <= 94111 || 94176 <= character && character <= 94177 || character == 94179 || 94208 <= character && character <= 100343 || 100352 <= character && character <= 101589 || 101632 <= character && character <= 101640 || 110592 <= character && character <= 110878 || 110928 <= character && character <= 110930 || 110948 <= character && character <= 110951 || 110960 <= character && character <= 111355 || 113664 <= character && character <= 113770 || 113776 <= character && character <= 113788 || 113792 <= character && character <= 113800 || 113808 <= character && character <= 113817 || 119520 <= character && character <= 119539 || 119648 <= character && character <= 119672 || 119808 <= character && character <= 119892 || 119894 <= character && character <= 119964 || 119966 <= character && character <= 119967 || character == 119970 || 119973 <= character && character <= 119974 || 119977 <= character && character <= 119980 || 119982 <= character && character <= 119993 || character == 119995 || 119997 <= character && character <= 120003 || 120005 <= character && character <= 120069 || 120071 <= character && character <= 120074 || 120077 <= character && character <= 120084 || 120086 <= character && character <= 120092 || 120094 <= character && character <= 120121 || 120123 <= character && character <= 120126 || 120128 <= character && character <= 120132 || character == 120134 || 120138 <= character && character <= 120144 || 120146 <= character && character <= 120485 || 120488 <= character && character <= 120512 || 120514 <= character && character <= 120538 || 120540 <= character && character <= 120570 || 120572 <= character && character <= 120596 || 120598 <= character && character <= 120628 || 120630 <= character && character <= 120654 || 120656 <= character && character <= 120686 || 120688 <= character && character <= 120712 || 120714 <= character && character <= 120744 || 120746 <= character && character <= 120770 || 120772 <= character && character <= 120779 || 120782 <= character && character <= 120831 || 123136 <= character && character <= 123180 || 123191 <= character && character <= 123197 || 123200 <= character && character <= 123209 || character == 123214 || 123584 <= character && character <= 123627 || 123632 <= character && character <= 123641 || 124928 <= character && character <= 125124 || 125127 <= character && character <= 125135 || 125184 <= character && character <= 125251 || character == 125259 || 125264 <= character && character <= 125273 || 126065 <= character && character <= 126123 || 126125 <= character && character <= 126127 || 126129 <= character && character <= 126132 || 126209 <= character && character <= 126253 || 126255 <= character && character <= 126269 || 126464 <= character && character <= 126467 || 126469 <= character && character <= 126495 || 126497 <= character && character <= 126498 || character == 126500 || character == 126503 || 126505 <= character && character <= 126514 || 126516 <= character && character <= 126519 || character == 126521 || character == 126523 || character == 126530 || character == 126535 || character == 126537 || character == 126539 || 126541 <= character && character <= 126543 || 126545 <= character && character <= 126546 || character == 126548 || character == 126551 || character == 126553 || character == 126555 || character == 126557 || character == 126559 || 126561 <= character && character <= 126562 || character == 126564 || 126567 <= character && character <= 126570 || 126572 <= character && character <= 126578 || 126580 <= character && character <= 126583 || 126585 <= character && character <= 126588 || character == 126590 || 126592 <= character && character <= 126601 || 126603 <= character && character <= 126619 || 126625 <= character && character <= 126627 || 126629 <= character && character <= 126633 || 126635 <= character && character <= 126651 || 127232 <= character && character <= 127244 || 130032 <= character && character <= 130041 || 131072 <= character && character <= 173789 || 173824 <= character && character <= 177972 || 177984 <= character && character <= 178205 || 178208 <= character && character <= 183969 || 183984 <= character && character <= 191456 || 194560 <= character && character <= 195101 || 196608 <= character && character <= 201546 || false) { return true; }
+		return false;
+	}
+	bool pystr::isCharAlpha() const {
+		pystr character = (*this)[0];
+		if (65 <= character && character <= 90 || 97 <= character && character <= 122 || character == 170 || character == 181 || character == 186 || 192 <= character && character <= 214 || 216 <= character && character <= 246 || 248 <= character && character <= 705 || 710 <= character && character <= 721 || 736 <= character && character <= 740 || character == 748 || character == 750 || 880 <= character && character <= 884 || 886 <= character && character <= 887 || 890 <= character && character <= 893 || character == 895 || character == 902 || 904 <= character && character <= 906 || character == 908 || 910 <= character && character <= 929 || 931 <= character && character <= 1013 || 1015 <= character && character <= 1153 || 1162 <= character && character <= 1327 || 1329 <= character && character <= 1366 || character == 1369 || 1376 <= character && character <= 1416 || 1488 <= character && character <= 1514 || 1519 <= character && character <= 1522 || 1568 <= character && character <= 1610 || 1646 <= character && character <= 1647 || 1649 <= character && character <= 1747 || character == 1749 || 1765 <= character && character <= 1766 || 1774 <= character && character <= 1775 || 1786 <= character && character <= 1788 || character == 1791 || character == 1808 || 1810 <= character && character <= 1839 || 1869 <= character && character <= 1957 || character == 1969 || 1994 <= character && character <= 2026 || 2036 <= character && character <= 2037 || character == 2042 || 2048 <= character && character <= 2069 || character == 2074 || character == 2084 || character == 2088 || 2112 <= character && character <= 2136 || 2144 <= character && character <= 2154 || 2208 <= character && character <= 2228 || 2230 <= character && character <= 2247 || 2308 <= character && character <= 2361 || character == 2365 || character == 2384 || 2392 <= character && character <= 2401 || 2417 <= character && character <= 2432 || 2437 <= character && character <= 2444 || 2447 <= character && character <= 2448 || 2451 <= character && character <= 2472 || 2474 <= character && character <= 2480 || character == 2482 || 2486 <= character && character <= 2489 || character == 2493 || character == 2510 || 2524 <= character && character <= 2525 || 2527 <= character && character <= 2529 || 2544 <= character && character <= 2545 || character == 2556 || 2565 <= character && character <= 2570 || 2575 <= character && character <= 2576 || 2579 <= character && character <= 2600 || 2602 <= character && character <= 2608 || 2610 <= character && character <= 2611 || 2613 <= character && character <= 2614 || 2616 <= character && character <= 2617 || 2649 <= character && character <= 2652 || character == 2654 || 2674 <= character && character <= 2676 || 2693 <= character && character <= 2701 || 2703 <= character && character <= 2705 || 2707 <= character && character <= 2728 || 2730 <= character && character <= 2736 || 2738 <= character && character <= 2739 || 2741 <= character && character <= 2745 || character == 2749 || character == 2768 || 2784 <= character && character <= 2785 || character == 2809 || 2821 <= character && character <= 2828 || 2831 <= character && character <= 2832 || 2835 <= character && character <= 2856 || 2858 <= character && character <= 2864 || 2866 <= character && character <= 2867 || 2869 <= character && character <= 2873 || character == 2877 || 2908 <= character && character <= 2909 || 2911 <= character && character <= 2913 || character == 2929 || character == 2947 || 2949 <= character && character <= 2954 || 2958 <= character && character <= 2960 || 2962 <= character && character <= 2965 || 2969 <= character && character <= 2970 || character == 2972 || 2974 <= character && character <= 2975 || 2979 <= character && character <= 2980 || 2984 <= character && character <= 2986 || 2990 <= character && character <= 3001 || character == 3024 || 3077 <= character && character <= 3084 || 3086 <= character && character <= 3088 || 3090 <= character && character <= 3112 || 3114 <= character && character <= 3129 || character == 3133 || 3160 <= character && character <= 3162 || 3168 <= character && character <= 3169 || character == 3200 || 3205 <= character && character <= 3212 || 3214 <= character && character <= 3216 || 3218 <= character && character <= 3240 || 3242 <= character && character <= 3251 || 3253 <= character && character <= 3257 || character == 3261 || character == 3294 || 3296 <= character && character <= 3297 || 3313 <= character && character <= 3314 || 3332 <= character && character <= 3340 || 3342 <= character && character <= 3344 || 3346 <= character && character <= 3386 || character == 3389 || character == 3406 || 3412 <= character && character <= 3414 || 3423 <= character && character <= 3425 || 3450 <= character && character <= 3455 || 3461 <= character && character <= 3478 || 3482 <= character && character <= 3505 || 3507 <= character && character <= 3515 || character == 3517 || 3520 <= character && character <= 3526 || 3585 <= character && character <= 3632 || 3634 <= character && character <= 3635 || 3648 <= character && character <= 3654 || 3713 <= character && character <= 3714 || character == 3716 || 3718 <= character && character <= 3722 || 3724 <= character && character <= 3747 || character == 3749 || 3751 <= character && character <= 3760 || 3762 <= character && character <= 3763 || character == 3773 || 3776 <= character && character <= 3780 || character == 3782 || 3804 <= character && character <= 3807 || character == 3840 || 3904 <= character && character <= 3911 || 3913 <= character && character <= 3948 || 3976 <= character && character <= 3980 || 4096 <= character && character <= 4138 || character == 4159 || 4176 <= character && character <= 4181 || 4186 <= character && character <= 4189 || character == 4193 || 4197 <= character && character <= 4198 || 4206 <= character && character <= 4208 || 4213 <= character && character <= 4225 || character == 4238 || 4256 <= character && character <= 4293 || character == 4295 || character == 4301 || 4304 <= character && character <= 4346 || 4348 <= character && character <= 4680 || 4682 <= character && character <= 4685 || 4688 <= character && character <= 4694 || character == 4696 || 4698 <= character && character <= 4701 || 4704 <= character && character <= 4744 || 4746 <= character && character <= 4749 || 4752 <= character && character <= 4784 || 4786 <= character && character <= 4789 || 4792 <= character && character <= 4798 || character == 4800 || 4802 <= character && character <= 4805 || 4808 <= character && character <= 4822 || 4824 <= character && character <= 4880 || 4882 <= character && character <= 4885 || 4888 <= character && character <= 4954 || 4992 <= character && character <= 5007 || 5024 <= character && character <= 5109 || 5112 <= character && character <= 5117 || 5121 <= character && character <= 5740 || 5743 <= character && character <= 5759 || 5761 <= character && character <= 5786 || 5792 <= character && character <= 5866 || 5873 <= character && character <= 5880 || 5888 <= character && character <= 5900 || 5902 <= character && character <= 5905 || 5920 <= character && character <= 5937 || 5952 <= character && character <= 5969 || 5984 <= character && character <= 5996 || 5998 <= character && character <= 6000 || 6016 <= character && character <= 6067 || character == 6103 || character == 6108 || 6176 <= character && character <= 6264 || 6272 <= character && character <= 6276 || 6279 <= character && character <= 6312 || character == 6314 || 6320 <= character && character <= 6389 || 6400 <= character && character <= 6430 || 6480 <= character && character <= 6509 || 6512 <= character && character <= 6516 || 6528 <= character && character <= 6571 || 6576 <= character && character <= 6601 || 6656 <= character && character <= 6678 || 6688 <= character && character <= 6740 || character == 6823 || 6917 <= character && character <= 6963 || 6981 <= character && character <= 6987 || 7043 <= character && character <= 7072 || 7086 <= character && character <= 7087 || 7098 <= character && character <= 7141 || 7168 <= character && character <= 7203 || 7245 <= character && character <= 7247 || 7258 <= character && character <= 7293 || 7296 <= character && character <= 7304 || 7312 <= character && character <= 7354 || 7357 <= character && character <= 7359 || 7401 <= character && character <= 7404 || 7406 <= character && character <= 7411 || 7413 <= character && character <= 7414 || character == 7418 || 7424 <= character && character <= 7615 || 7680 <= character && character <= 7957 || 7960 <= character && character <= 7965 || 7968 <= character && character <= 8005 || 8008 <= character && character <= 8013 || 8016 <= character && character <= 8023 || character == 8025 || character == 8027 || character == 8029 || 8031 <= character && character <= 8061 || 8064 <= character && character <= 8116 || 8118 <= character && character <= 8124 || character == 8126 || 8130 <= character && character <= 8132 || 8134 <= character && character <= 8140 || 8144 <= character && character <= 8147 || 8150 <= character && character <= 8155 || 8160 <= character && character <= 8172 || 8178 <= character && character <= 8180 || 8182 <= character && character <= 8188 || character == 8305 || character == 8319 || 8336 <= character && character <= 8348 || character == 8450 || character == 8455 || 8458 <= character && character <= 8467 || character == 8469 || 8473 <= character && character <= 8477 || character == 8484 || character == 8486 || character == 8488 || 8490 <= character && character <= 8493 || 8495 <= character && character <= 8505 || 8508 <= character && character <= 8511 || 8517 <= character && character <= 8521 || character == 8526 || 8579 <= character && character <= 8580 || 11264 <= character && character <= 11310 || 11312 <= character && character <= 11358 || 11360 <= character && character <= 11492 || 11499 <= character && character <= 11502 || 11506 <= character && character <= 11507 || 11520 <= character && character <= 11557 || character == 11559 || character == 11565 || 11568 <= character && character <= 11623 || character == 11631 || 11648 <= character && character <= 11670 || 11680 <= character && character <= 11686 || 11688 <= character && character <= 11694 || 11696 <= character && character <= 11702 || 11704 <= character && character <= 11710 || 11712 <= character && character <= 11718 || 11720 <= character && character <= 11726 || 11728 <= character && character <= 11734 || 11736 <= character && character <= 11742 || character == 11823 || 12293 <= character && character <= 12294 || 12337 <= character && character <= 12341 || 12347 <= character && character <= 12348 || 12353 <= character && character <= 12438 || 12445 <= character && character <= 12447 || 12449 <= character && character <= 12538 || 12540 <= character && character <= 12543 || 12549 <= character && character <= 12591 || 12593 <= character && character <= 12686 || 12704 <= character && character <= 12735 || 12784 <= character && character <= 12799 || 13312 <= character && character <= 19903 || 19968 <= character && character <= 40956 || 40960 <= character && character <= 42124 || 42192 <= character && character <= 42237 || 42240 <= character && character <= 42508 || 42512 <= character && character <= 42527 || 42538 <= character && character <= 42539 || 42560 <= character && character <= 42606 || 42623 <= character && character <= 42653 || 42656 <= character && character <= 42725 || 42775 <= character && character <= 42783 || 42786 <= character && character <= 42888 || 42891 <= character && character <= 42943 || 42946 <= character && character <= 42954 || 42997 <= character && character <= 43009 || 43011 <= character && character <= 43013 || 43015 <= character && character <= 43018 || 43020 <= character && character <= 43042 || 43072 <= character && character <= 43123 || 43138 <= character && character <= 43187 || 43250 <= character && character <= 43255 || character == 43259 || 43261 <= character && character <= 43262 || 43274 <= character && character <= 43301 || 43312 <= character && character <= 43334 || 43360 <= character && character <= 43388 || 43396 <= character && character <= 43442 || character == 43471 || 43488 <= character && character <= 43492 || 43494 <= character && character <= 43503 || 43514 <= character && character <= 43518 || 43520 <= character && character <= 43560 || 43584 <= character && character <= 43586 || 43588 <= character && character <= 43595 || 43616 <= character && character <= 43638 || character == 43642 || 43646 <= character && character <= 43695 || character == 43697 || 43701 <= character && character <= 43702 || 43705 <= character && character <= 43709 || character == 43712 || character == 43714 || 43739 <= character && character <= 43741 || 43744 <= character && character <= 43754 || 43762 <= character && character <= 43764 || 43777 <= character && character <= 43782 || 43785 <= character && character <= 43790 || 43793 <= character && character <= 43798 || 43808 <= character && character <= 43814 || 43816 <= character && character <= 43822 || 43824 <= character && character <= 43866 || 43868 <= character && character <= 43881 || 43888 <= character && character <= 44002 || 44032 <= character && character <= 55203 || 55216 <= character && character <= 55238 || 55243 <= character && character <= 55291 || 63744 <= character && character <= 64109 || 64112 <= character && character <= 64217 || 64256 <= character && character <= 64262 || 64275 <= character && character <= 64279 || character == 64285 || 64287 <= character && character <= 64296 || 64298 <= character && character <= 64310 || 64312 <= character && character <= 64316 || character == 64318 || 64320 <= character && character <= 64321 || 64323 <= character && character <= 64324 || 64326 <= character && character <= 64433 || 64467 <= character && character <= 64829 || 64848 <= character && character <= 64911 || 64914 <= character && character <= 64967 || 65008 <= character && character <= 65019 || 65136 <= character && character <= 65140 || 65142 <= character && character <= 65276 || 65313 <= character && character <= 65338 || 65345 <= character && character <= 65370 || 65382 <= character && character <= 65470 || 65474 <= character && character <= 65479 || 65482 <= character && character <= 65487 || 65490 <= character && character <= 65495 || 65498 <= character && character <= 65500 || 65536 <= character && character <= 65547 || 65549 <= character && character <= 65574 || 65576 <= character && character <= 65594 || 65596 <= character && character <= 65597 || 65599 <= character && character <= 65613 || 65616 <= character && character <= 65629 || 65664 <= character && character <= 65786 || 66176 <= character && character <= 66204 || 66208 <= character && character <= 66256 || 66304 <= character && character <= 66335 || 66349 <= character && character <= 66368 || 66370 <= character && character <= 66377 || 66384 <= character && character <= 66421 || 66432 <= character && character <= 66461 || 66464 <= character && character <= 66499 || 66504 <= character && character <= 66511 || 66560 <= character && character <= 66717 || 66736 <= character && character <= 66771 || 66776 <= character && character <= 66811 || 66816 <= character && character <= 66855 || 66864 <= character && character <= 66915 || 67072 <= character && character <= 67382 || 67392 <= character && character <= 67413 || 67424 <= character && character <= 67431 || 67584 <= character && character <= 67589 || character == 67592 || 67594 <= character && character <= 67637 || 67639 <= character && character <= 67640 || character == 67644 || 67647 <= character && character <= 67669 || 67680 <= character && character <= 67702 || 67712 <= character && character <= 67742 || 67808 <= character && character <= 67826 || 67828 <= character && character <= 67829 || 67840 <= character && character <= 67861 || 67872 <= character && character <= 67897 || 67968 <= character && character <= 68023 || 68030 <= character && character <= 68031 || character == 68096 || 68112 <= character && character <= 68115 || 68117 <= character && character <= 68119 || 68121 <= character && character <= 68149 || 68192 <= character && character <= 68220 || 68224 <= character && character <= 68252 || 68288 <= character && character <= 68295 || 68297 <= character && character <= 68324 || 68352 <= character && character <= 68405 || 68416 <= character && character <= 68437 || 68448 <= character && character <= 68466 || 68480 <= character && character <= 68497 || 68608 <= character && character <= 68680 || 68736 <= character && character <= 68786 || 68800 <= character && character <= 68850 || 68864 <= character && character <= 68899 || 69248 <= character && character <= 69289 || 69296 <= character && character <= 69297 || 69376 <= character && character <= 69404 || character == 69415 || 69424 <= character && character <= 69445 || 69552 <= character && character <= 69572 || 69600 <= character && character <= 69622 || 69635 <= character && character <= 69687 || 69763 <= character && character <= 69807 || 69840 <= character && character <= 69864 || 69891 <= character && character <= 69926 || character == 69956 || character == 69959 || 69968 <= character && character <= 70002 || character == 70006 || 70019 <= character && character <= 70066 || 70081 <= character && character <= 70084 || character == 70106 || character == 70108 || 70144 <= character && character <= 70161 || 70163 <= character && character <= 70187 || 70272 <= character && character <= 70278 || character == 70280 || 70282 <= character && character <= 70285 || 70287 <= character && character <= 70301 || 70303 <= character && character <= 70312 || 70320 <= character && character <= 70366 || 70405 <= character && character <= 70412 || 70415 <= character && character <= 70416 || 70419 <= character && character <= 70440 || 70442 <= character && character <= 70448 || 70450 <= character && character <= 70451 || 70453 <= character && character <= 70457 || character == 70461 || character == 70480 || 70493 <= character && character <= 70497 || 70656 <= character && character <= 70708 || 70727 <= character && character <= 70730 || 70751 <= character && character <= 70753 || 70784 <= character && character <= 70831 || 70852 <= character && character <= 70853 || character == 70855 || 71040 <= character && character <= 71086 || 71128 <= character && character <= 71131 || 71168 <= character && character <= 71215 || character == 71236 || 71296 <= character && character <= 71338 || character == 71352 || 71424 <= character && character <= 71450 || 71680 <= character && character <= 71723 || 71840 <= character && character <= 71903 || 71935 <= character && character <= 71942 || character == 71945 || 71948 <= character && character <= 71955 || 71957 <= character && character <= 71958 || 71960 <= character && character <= 71983 || character == 71999 || character == 72001 || 72096 <= character && character <= 72103 || 72106 <= character && character <= 72144 || character == 72161 || character == 72163 || character == 72192 || 72203 <= character && character <= 72242 || character == 72250 || character == 72272 || 72284 <= character && character <= 72329 || character == 72349 || 72384 <= character && character <= 72440 || 72704 <= character && character <= 72712 || 72714 <= character && character <= 72750 || character == 72768 || 72818 <= character && character <= 72847 || 72960 <= character && character <= 72966 || 72968 <= character && character <= 72969 || 72971 <= character && character <= 73008 || character == 73030 || 73056 <= character && character <= 73061 || 73063 <= character && character <= 73064 || 73066 <= character && character <= 73097 || character == 73112 || 73440 <= character && character <= 73458 || character == 73648 || 73728 <= character && character <= 74649 || 74880 <= character && character <= 75075 || 77824 <= character && character <= 78894 || 82944 <= character && character <= 83526 || 92160 <= character && character <= 92728 || 92736 <= character && character <= 92766 || 92880 <= character && character <= 92909 || 92928 <= character && character <= 92975 || 92992 <= character && character <= 92995 || 93027 <= character && character <= 93047 || 93053 <= character && character <= 93071 || 93760 <= character && character <= 93823 || 93952 <= character && character <= 94026 || character == 94032 || 94099 <= character && character <= 94111 || 94176 <= character && character <= 94177 || character == 94179 || 94208 <= character && character <= 100343 || 100352 <= character && character <= 101589 || 101632 <= character && character <= 101640 || 110592 <= character && character <= 110878 || 110928 <= character && character <= 110930 || 110948 <= character && character <= 110951 || 110960 <= character && character <= 111355 || 113664 <= character && character <= 113770 || 113776 <= character && character <= 113788 || 113792 <= character && character <= 113800 || 113808 <= character && character <= 113817 || 119808 <= character && character <= 119892 || 119894 <= character && character <= 119964 || 119966 <= character && character <= 119967 || character == 119970 || 119973 <= character && character <= 119974 || 119977 <= character && character <= 119980 || 119982 <= character && character <= 119993 || character == 119995 || 119997 <= character && character <= 120003 || 120005 <= character && character <= 120069 || 120071 <= character && character <= 120074 || 120077 <= character && character <= 120084 || 120086 <= character && character <= 120092 || 120094 <= character && character <= 120121 || 120123 <= character && character <= 120126 || 120128 <= character && character <= 120132 || character == 120134 || 120138 <= character && character <= 120144 || 120146 <= character && character <= 120485 || 120488 <= character && character <= 120512 || 120514 <= character && character <= 120538 || 120540 <= character && character <= 120570 || 120572 <= character && character <= 120596 || 120598 <= character && character <= 120628 || 120630 <= character && character <= 120654 || 120656 <= character && character <= 120686 || 120688 <= character && character <= 120712 || 120714 <= character && character <= 120744 || 120746 <= character && character <= 120770 || 120772 <= character && character <= 120779 || 123136 <= character && character <= 123180 || 123191 <= character && character <= 123197 || character == 123214 || 123584 <= character && character <= 123627 || 124928 <= character && character <= 125124 || 125184 <= character && character <= 125251 || character == 125259 || 126464 <= character && character <= 126467 || 126469 <= character && character <= 126495 || 126497 <= character && character <= 126498 || character == 126500 || character == 126503 || 126505 <= character && character <= 126514 || 126516 <= character && character <= 126519 || character == 126521 || character == 126523 || character == 126530 || character == 126535 || character == 126537 || character == 126539 || 126541 <= character && character <= 126543 || 126545 <= character && character <= 126546 || character == 126548 || character == 126551 || character == 126553 || character == 126555 || character == 126557 || character == 126559 || 126561 <= character && character <= 126562 || character == 126564 || 126567 <= character && character <= 126570 || 126572 <= character && character <= 126578 || 126580 <= character && character <= 126583 || 126585 <= character && character <= 126588 || character == 126590 || 126592 <= character && character <= 126601 || 126603 <= character && character <= 126619 || 126625 <= character && character <= 126627 || 126629 <= character && character <= 126633 || 126635 <= character && character <= 126651 || 131072 <= character && character <= 173789 || 173824 <= character && character <= 177972 || 177984 <= character && character <= 178205 || 178208 <= character && character <= 183969 || 183984 <= character && character <= 191456 || 194560 <= character && character <= 195101 || 196608 <= character && character <= 201546 || false) { return true; }
+		return false;
+	}
+	bool pystr::isCharAscii() const {
+		pystr character = (*this)[0];
+		if (0 <= character && character <= 127 || false) { return true; }
+		return false;
+	}
+	bool pystr::isCharDigit() const {
+		pystr character = (*this)[0];
+		if (48 <= character && character <= 57 || 178 <= character && character <= 179 || character == 185 || 1632 <= character && character <= 1641 || 1776 <= character && character <= 1785 || 1984 <= character && character <= 1993 || 2406 <= character && character <= 2415 || 2534 <= character && character <= 2543 || 2662 <= character && character <= 2671 || 2790 <= character && character <= 2799 || 2918 <= character && character <= 2927 || 3046 <= character && character <= 3055 || 3174 <= character && character <= 3183 || 3302 <= character && character <= 3311 || 3430 <= character && character <= 3439 || 3558 <= character && character <= 3567 || 3664 <= character && character <= 3673 || 3792 <= character && character <= 3801 || 3872 <= character && character <= 3881 || 4160 <= character && character <= 4169 || 4240 <= character && character <= 4249 || 4969 <= character && character <= 4977 || 6112 <= character && character <= 6121 || 6160 <= character && character <= 6169 || 6470 <= character && character <= 6479 || 6608 <= character && character <= 6618 || 6784 <= character && character <= 6793 || 6800 <= character && character <= 6809 || 6992 <= character && character <= 7001 || 7088 <= character && character <= 7097 || 7232 <= character && character <= 7241 || 7248 <= character && character <= 7257 || character == 8304 || 8308 <= character && character <= 8313 || 8320 <= character && character <= 8329 || 9312 <= character && character <= 9320 || 9332 <= character && character <= 9340 || 9352 <= character && character <= 9360 || character == 9450 || 9461 <= character && character <= 9469 || character == 9471 || 10102 <= character && character <= 10110 || 10112 <= character && character <= 10120 || 10122 <= character && character <= 10130 || 42528 <= character && character <= 42537 || 43216 <= character && character <= 43225 || 43264 <= character && character <= 43273 || 43472 <= character && character <= 43481 || 43504 <= character && character <= 43513 || 43600 <= character && character <= 43609 || 44016 <= character && character <= 44025 || 65296 <= character && character <= 65305 || 66720 <= character && character <= 66729 || 68160 <= character && character <= 68163 || 68912 <= character && character <= 68921 || 69216 <= character && character <= 69224 || 69714 <= character && character <= 69722 || 69734 <= character && character <= 69743 || 69872 <= character && character <= 69881 || 69942 <= character && character <= 69951 || 70096 <= character && character <= 70105 || 70384 <= character && character <= 70393 || 70736 <= character && character <= 70745 || 70864 <= character && character <= 70873 || 71248 <= character && character <= 71257 || 71360 <= character && character <= 71369 || 71472 <= character && character <= 71481 || 71904 <= character && character <= 71913 || 72016 <= character && character <= 72025 || 72784 <= character && character <= 72793 || 73040 <= character && character <= 73049 || 73120 <= character && character <= 73129 || 92768 <= character && character <= 92777 || 93008 <= character && character <= 93017 || 120782 <= character && character <= 120831 || 123200 <= character && character <= 123209 || 123632 <= character && character <= 123641 || 125264 <= character && character <= 125273 || 127232 <= character && character <= 127242 || 130032 <= character && character <= 130041 || false) { return true; }
+		return false;
+	}
+	bool pystr::isCharDecimal() const {
+		pystr character = (*this)[0];
+		if (48 <= character && character <= 57 || 1632 <= character && character <= 1641 || 1776 <= character && character <= 1785 || 1984 <= character && character <= 1993 || 2406 <= character && character <= 2415 || 2534 <= character && character <= 2543 || 2662 <= character && character <= 2671 || 2790 <= character && character <= 2799 || 2918 <= character && character <= 2927 || 3046 <= character && character <= 3055 || 3174 <= character && character <= 3183 || 3302 <= character && character <= 3311 || 3430 <= character && character <= 3439 || 3558 <= character && character <= 3567 || 3664 <= character && character <= 3673 || 3792 <= character && character <= 3801 || 3872 <= character && character <= 3881 || 4160 <= character && character <= 4169 || 4240 <= character && character <= 4249 || 6112 <= character && character <= 6121 || 6160 <= character && character <= 6169 || 6470 <= character && character <= 6479 || 6608 <= character && character <= 6617 || 6784 <= character && character <= 6793 || 6800 <= character && character <= 6809 || 6992 <= character && character <= 7001 || 7088 <= character && character <= 7097 || 7232 <= character && character <= 7241 || 7248 <= character && character <= 7257 || 42528 <= character && character <= 42537 || 43216 <= character && character <= 43225 || 43264 <= character && character <= 43273 || 43472 <= character && character <= 43481 || 43504 <= character && character <= 43513 || 43600 <= character && character <= 43609 || 44016 <= character && character <= 44025 || 65296 <= character && character <= 65305 || 66720 <= character && character <= 66729 || 68912 <= character && character <= 68921 || 69734 <= character && character <= 69743 || 69872 <= character && character <= 69881 || 69942 <= character && character <= 69951 || 70096 <= character && character <= 70105 || 70384 <= character && character <= 70393 || 70736 <= character && character <= 70745 || 70864 <= character && character <= 70873 || 71248 <= character && character <= 71257 || 71360 <= character && character <= 71369 || 71472 <= character && character <= 71481 || 71904 <= character && character <= 71913 || 72016 <= character && character <= 72025 || 72784 <= character && character <= 72793 || 73040 <= character && character <= 73049 || 73120 <= character && character <= 73129 || 92768 <= character && character <= 92777 || 93008 <= character && character <= 93017 || 120782 <= character && character <= 120831 || 123200 <= character && character <= 123209 || 123632 <= character && character <= 123641 || 125264 <= character && character <= 125273 || 130032 <= character && character <= 130041 || false) { return true; }
+		return false;
+	}
+	bool pystr::isCharNumeric() const {
+		pystr character = (*this)[0];
+		if (48 <= character && character <= 57 || 178 <= character && character <= 179 || character == 185 || 188 <= character && character <= 190 || 1632 <= character && character <= 1641 || 1776 <= character && character <= 1785 || 1984 <= character && character <= 1993 || 2406 <= character && character <= 2415 || 2534 <= character && character <= 2543 || 2548 <= character && character <= 2553 || 2662 <= character && character <= 2671 || 2790 <= character && character <= 2799 || 2918 <= character && character <= 2927 || 2930 <= character && character <= 2935 || 3046 <= character && character <= 3058 || 3174 <= character && character <= 3183 || 3192 <= character && character <= 3198 || 3302 <= character && character <= 3311 || 3416 <= character && character <= 3422 || 3430 <= character && character <= 3448 || 3558 <= character && character <= 3567 || 3664 <= character && character <= 3673 || 3792 <= character && character <= 3801 || 3872 <= character && character <= 3891 || 4160 <= character && character <= 4169 || 4240 <= character && character <= 4249 || 4969 <= character && character <= 4988 || 5870 <= character && character <= 5872 || 6112 <= character && character <= 6121 || 6128 <= character && character <= 6137 || 6160 <= character && character <= 6169 || 6470 <= character && character <= 6479 || 6608 <= character && character <= 6618 || 6784 <= character && character <= 6793 || 6800 <= character && character <= 6809 || 6992 <= character && character <= 7001 || 7088 <= character && character <= 7097 || 7232 <= character && character <= 7241 || 7248 <= character && character <= 7257 || character == 8304 || 8308 <= character && character <= 8313 || 8320 <= character && character <= 8329 || 8528 <= character && character <= 8578 || 8581 <= character && character <= 8585 || 9312 <= character && character <= 9371 || 9450 <= character && character <= 9471 || 10102 <= character && character <= 10131 || character == 11517 || character == 12295 || 12321 <= character && character <= 12329 || 12344 <= character && character <= 12346 || 12690 <= character && character <= 12693 || 12832 <= character && character <= 12841 || 12872 <= character && character <= 12879 || 12881 <= character && character <= 12895 || 12928 <= character && character <= 12937 || 12977 <= character && character <= 12991 || character == 13317 || character == 13443 || character == 14378 || character == 15181 || character == 19968 || character == 19971 || character == 19975 || character == 19977 || character == 20061 || character == 20108 || character == 20116 || character == 20118 || 20159 <= character && character <= 20160 || character == 20191 || character == 20200 || character == 20237 || character == 20336 || character == 20740 || character == 20806 || character == 20841 || character == 20843 || character == 20845 || character == 21313 || 21315 <= character && character <= 21317 || character == 21324 || 21441 <= character && character <= 21444 || character == 22235 || character == 22769 || character == 22777 || character == 24186 || 24318 <= character && character <= 24319 || 24332 <= character && character <= 24334 || character == 24336 || character == 25342 || character == 25420 || character == 26578 || character == 28422 || character == 29590 || character == 30334 || character == 32902 || character == 33836 || character == 36014 || character == 36019 || character == 36144 || character == 38433 || character == 38470 || character == 38476 || character == 38520 || character == 38646 || 42528 <= character && character <= 42537 || 42726 <= character && character <= 42735 || 43056 <= character && character <= 43061 || 43216 <= character && character <= 43225 || 43264 <= character && character <= 43273 || 43472 <= character && character <= 43481 || 43504 <= character && character <= 43513 || 43600 <= character && character <= 43609 || 44016 <= character && character <= 44025 || character == 63851 || character == 63859 || character == 63864 || character == 63922 || character == 63953 || character == 63955 || character == 63997 || 65296 <= character && character <= 65305 || 65799 <= character && character <= 65843 || 65856 <= character && character <= 65912 || 65930 <= character && character <= 65931 || 66273 <= character && character <= 66299 || 66336 <= character && character <= 66339 || character == 66369 || character == 66378 || 66513 <= character && character <= 66517 || 66720 <= character && character <= 66729 || 67672 <= character && character <= 67679 || 67705 <= character && character <= 67711 || 67751 <= character && character <= 67759 || 67835 <= character && character <= 67839 || 67862 <= character && character <= 67867 || 68028 <= character && character <= 68029 || 68032 <= character && character <= 68047 || 68050 <= character && character <= 68095 || 68160 <= character && character <= 68168 || 68221 <= character && character <= 68222 || 68253 <= character && character <= 68255 || 68331 <= character && character <= 68335 || 68440 <= character && character <= 68447 || 68472 <= character && character <= 68479 || 68521 <= character && character <= 68527 || 68858 <= character && character <= 68863 || 68912 <= character && character <= 68921 || 69216 <= character && character <= 69246 || 69405 <= character && character <= 69414 || 69457 <= character && character <= 69460 || 69573 <= character && character <= 69579 || 69714 <= character && character <= 69743 || 69872 <= character && character <= 69881 || 69942 <= character && character <= 69951 || 70096 <= character && character <= 70105 || 70113 <= character && character <= 70132 || 70384 <= character && character <= 70393 || 70736 <= character && character <= 70745 || 70864 <= character && character <= 70873 || 71248 <= character && character <= 71257 || 71360 <= character && character <= 71369 || 71472 <= character && character <= 71483 || 71904 <= character && character <= 71922 || 72016 <= character && character <= 72025 || 72784 <= character && character <= 72812 || 73040 <= character && character <= 73049 || 73120 <= character && character <= 73129 || 73664 <= character && character <= 73684 || 74752 <= character && character <= 74862 || 92768 <= character && character <= 92777 || 93008 <= character && character <= 93017 || 93019 <= character && character <= 93025 || 93824 <= character && character <= 93846 || 119520 <= character && character <= 119539 || 119648 <= character && character <= 119672 || 120782 <= character && character <= 120831 || 123200 <= character && character <= 123209 || 123632 <= character && character <= 123641 || 125127 <= character && character <= 125135 || 125264 <= character && character <= 125273 || 126065 <= character && character <= 126123 || 126125 <= character && character <= 126127 || 126129 <= character && character <= 126132 || 126209 <= character && character <= 126253 || 126255 <= character && character <= 126269 || 127232 <= character && character <= 127244 || 130032 <= character && character <= 130041 || character == 131073 || character == 131172 || character == 131298 || character == 131361 || character == 133418 || character == 133507 || character == 133516 || character == 133532 || character == 133866 || character == 133885 || character == 133913 || character == 140176 || character == 141720 || character == 146203 || character == 156269 || character == 194704 || false) { return true; }
+		return false;
+	}
+	bool pystr::isCharPrintable() const {
+		pystr character = (*this)[0];
+		if (32 <= character && character <= 126 || 161 <= character && character <= 172 || 174 <= character && character <= 887 || 890 <= character && character <= 895 || 900 <= character && character <= 906 || character == 908 || 910 <= character && character <= 929 || 931 <= character && character <= 1327 || 1329 <= character && character <= 1366 || 1369 <= character && character <= 1418 || 1421 <= character && character <= 1423 || 1425 <= character && character <= 1479 || 1488 <= character && character <= 1514 || 1519 <= character && character <= 1524 || 1542 <= character && character <= 1563 || 1566 <= character && character <= 1756 || 1758 <= character && character <= 1805 || 1808 <= character && character <= 1866 || 1869 <= character && character <= 1969 || 1984 <= character && character <= 2042 || 2045 <= character && character <= 2093 || 2096 <= character && character <= 2110 || 2112 <= character && character <= 2139 || character == 2142 || 2144 <= character && character <= 2154 || 2208 <= character && character <= 2228 || 2230 <= character && character <= 2247 || 2259 <= character && character <= 2273 || 2275 <= character && character <= 2435 || 2437 <= character && character <= 2444 || 2447 <= character && character <= 2448 || 2451 <= character && character <= 2472 || 2474 <= character && character <= 2480 || character == 2482 || 2486 <= character && character <= 2489 || 2492 <= character && character <= 2500 || 2503 <= character && character <= 2504 || 2507 <= character && character <= 2510 || character == 2519 || 2524 <= character && character <= 2525 || 2527 <= character && character <= 2531 || 2534 <= character && character <= 2558 || 2561 <= character && character <= 2563 || 2565 <= character && character <= 2570 || 2575 <= character && character <= 2576 || 2579 <= character && character <= 2600 || 2602 <= character && character <= 2608 || 2610 <= character && character <= 2611 || 2613 <= character && character <= 2614 || 2616 <= character && character <= 2617 || character == 2620 || 2622 <= character && character <= 2626 || 2631 <= character && character <= 2632 || 2635 <= character && character <= 2637 || character == 2641 || 2649 <= character && character <= 2652 || character == 2654 || 2662 <= character && character <= 2678 || 2689 <= character && character <= 2691 || 2693 <= character && character <= 2701 || 2703 <= character && character <= 2705 || 2707 <= character && character <= 2728 || 2730 <= character && character <= 2736 || 2738 <= character && character <= 2739 || 2741 <= character && character <= 2745 || 2748 <= character && character <= 2757 || 2759 <= character && character <= 2761 || 2763 <= character && character <= 2765 || character == 2768 || 2784 <= character && character <= 2787 || 2790 <= character && character <= 2801 || 2809 <= character && character <= 2815 || 2817 <= character && character <= 2819 || 2821 <= character && character <= 2828 || 2831 <= character && character <= 2832 || 2835 <= character && character <= 2856 || 2858 <= character && character <= 2864 || 2866 <= character && character <= 2867 || 2869 <= character && character <= 2873 || 2876 <= character && character <= 2884 || 2887 <= character && character <= 2888 || 2891 <= character && character <= 2893 || 2901 <= character && character <= 2903 || 2908 <= character && character <= 2909 || 2911 <= character && character <= 2915 || 2918 <= character && character <= 2935 || 2946 <= character && character <= 2947 || 2949 <= character && character <= 2954 || 2958 <= character && character <= 2960 || 2962 <= character && character <= 2965 || 2969 <= character && character <= 2970 || character == 2972 || 2974 <= character && character <= 2975 || 2979 <= character && character <= 2980 || 2984 <= character && character <= 2986 || 2990 <= character && character <= 3001 || 3006 <= character && character <= 3010 || 3014 <= character && character <= 3016 || 3018 <= character && character <= 3021 || character == 3024 || character == 3031 || 3046 <= character && character <= 3066 || 3072 <= character && character <= 3084 || 3086 <= character && character <= 3088 || 3090 <= character && character <= 3112 || 3114 <= character && character <= 3129 || 3133 <= character && character <= 3140 || 3142 <= character && character <= 3144 || 3146 <= character && character <= 3149 || 3157 <= character && character <= 3158 || 3160 <= character && character <= 3162 || 3168 <= character && character <= 3171 || 3174 <= character && character <= 3183 || 3191 <= character && character <= 3212 || 3214 <= character && character <= 3216 || 3218 <= character && character <= 3240 || 3242 <= character && character <= 3251 || 3253 <= character && character <= 3257 || 3260 <= character && character <= 3268 || 3270 <= character && character <= 3272 || 3274 <= character && character <= 3277 || 3285 <= character && character <= 3286 || character == 3294 || 3296 <= character && character <= 3299 || 3302 <= character && character <= 3311 || 3313 <= character && character <= 3314 || 3328 <= character && character <= 3340 || 3342 <= character && character <= 3344 || 3346 <= character && character <= 3396 || 3398 <= character && character <= 3400 || 3402 <= character && character <= 3407 || 3412 <= character && character <= 3427 || 3430 <= character && character <= 3455 || 3457 <= character && character <= 3459 || 3461 <= character && character <= 3478 || 3482 <= character && character <= 3505 || 3507 <= character && character <= 3515 || character == 3517 || 3520 <= character && character <= 3526 || character == 3530 || 3535 <= character && character <= 3540 || character == 3542 || 3544 <= character && character <= 3551 || 3558 <= character && character <= 3567 || 3570 <= character && character <= 3572 || 3585 <= character && character <= 3642 || 3647 <= character && character <= 3675 || 3713 <= character && character <= 3714 || character == 3716 || 3718 <= character && character <= 3722 || 3724 <= character && character <= 3747 || character == 3749 || 3751 <= character && character <= 3773 || 3776 <= character && character <= 3780 || character == 3782 || 3784 <= character && character <= 3789 || 3792 <= character && character <= 3801 || 3804 <= character && character <= 3807 || 3840 <= character && character <= 3911 || 3913 <= character && character <= 3948 || 3953 <= character && character <= 3991 || 3993 <= character && character <= 4028 || 4030 <= character && character <= 4044 || 4046 <= character && character <= 4058 || 4096 <= character && character <= 4293 || character == 4295 || character == 4301 || 4304 <= character && character <= 4680 || 4682 <= character && character <= 4685 || 4688 <= character && character <= 4694 || character == 4696 || 4698 <= character && character <= 4701 || 4704 <= character && character <= 4744 || 4746 <= character && character <= 4749 || 4752 <= character && character <= 4784 || 4786 <= character && character <= 4789 || 4792 <= character && character <= 4798 || character == 4800 || 4802 <= character && character <= 4805 || 4808 <= character && character <= 4822 || 4824 <= character && character <= 4880 || 4882 <= character && character <= 4885 || 4888 <= character && character <= 4954 || 4957 <= character && character <= 4988 || 4992 <= character && character <= 5017 || 5024 <= character && character <= 5109 || 5112 <= character && character <= 5117 || 5120 <= character && character <= 5759 || 5761 <= character && character <= 5788 || 5792 <= character && character <= 5880 || 5888 <= character && character <= 5900 || 5902 <= character && character <= 5908 || 5920 <= character && character <= 5942 || 5952 <= character && character <= 5971 || 5984 <= character && character <= 5996 || 5998 <= character && character <= 6000 || 6002 <= character && character <= 6003 || 6016 <= character && character <= 6109 || 6112 <= character && character <= 6121 || 6128 <= character && character <= 6137 || 6144 <= character && character <= 6157 || 6160 <= character && character <= 6169 || 6176 <= character && character <= 6264 || 6272 <= character && character <= 6314 || 6320 <= character && character <= 6389 || 6400 <= character && character <= 6430 || 6432 <= character && character <= 6443 || 6448 <= character && character <= 6459 || character == 6464 || 6468 <= character && character <= 6509 || 6512 <= character && character <= 6516 || 6528 <= character && character <= 6571 || 6576 <= character && character <= 6601 || 6608 <= character && character <= 6618 || 6622 <= character && character <= 6683 || 6686 <= character && character <= 6750 || 6752 <= character && character <= 6780 || 6783 <= character && character <= 6793 || 6800 <= character && character <= 6809 || 6816 <= character && character <= 6829 || 6832 <= character && character <= 6848 || 6912 <= character && character <= 6987 || 6992 <= character && character <= 7036 || 7040 <= character && character <= 7155 || 7164 <= character && character <= 7223 || 7227 <= character && character <= 7241 || 7245 <= character && character <= 7304 || 7312 <= character && character <= 7354 || 7357 <= character && character <= 7367 || 7376 <= character && character <= 7418 || 7424 <= character && character <= 7673 || 7675 <= character && character <= 7957 || 7960 <= character && character <= 7965 || 7968 <= character && character <= 8005 || 8008 <= character && character <= 8013 || 8016 <= character && character <= 8023 || character == 8025 || character == 8027 || character == 8029 || 8031 <= character && character <= 8061 || 8064 <= character && character <= 8116 || 8118 <= character && character <= 8132 || 8134 <= character && character <= 8147 || 8150 <= character && character <= 8155 || 8157 <= character && character <= 8175 || 8178 <= character && character <= 8180 || 8182 <= character && character <= 8190 || 8208 <= character && character <= 8231 || 8240 <= character && character <= 8286 || 8304 <= character && character <= 8305 || 8308 <= character && character <= 8334 || 8336 <= character && character <= 8348 || 8352 <= character && character <= 8383 || 8400 <= character && character <= 8432 || 8448 <= character && character <= 8587 || 8592 <= character && character <= 9254 || 9280 <= character && character <= 9290 || 9312 <= character && character <= 11123 || 11126 <= character && character <= 11157 || 11159 <= character && character <= 11310 || 11312 <= character && character <= 11358 || 11360 <= character && character <= 11507 || 11513 <= character && character <= 11557 || character == 11559 || character == 11565 || 11568 <= character && character <= 11623 || 11631 <= character && character <= 11632 || 11647 <= character && character <= 11670 || 11680 <= character && character <= 11686 || 11688 <= character && character <= 11694 || 11696 <= character && character <= 11702 || 11704 <= character && character <= 11710 || 11712 <= character && character <= 11718 || 11720 <= character && character <= 11726 || 11728 <= character && character <= 11734 || 11736 <= character && character <= 11742 || 11744 <= character && character <= 11858 || 11904 <= character && character <= 11929 || 11931 <= character && character <= 12019 || 12032 <= character && character <= 12245 || 12272 <= character && character <= 12283 || 12289 <= character && character <= 12351 || 12353 <= character && character <= 12438 || 12441 <= character && character <= 12543 || 12549 <= character && character <= 12591 || 12593 <= character && character <= 12686 || 12688 <= character && character <= 12771 || 12784 <= character && character <= 12830 || 12832 <= character && character <= 40956 || 40960 <= character && character <= 42124 || 42128 <= character && character <= 42182 || 42192 <= character && character <= 42539 || 42560 <= character && character <= 42743 || 42752 <= character && character <= 42943 || 42946 <= character && character <= 42954 || 42997 <= character && character <= 43052 || 43056 <= character && character <= 43065 || 43072 <= character && character <= 43127 || 43136 <= character && character <= 43205 || 43214 <= character && character <= 43225 || 43232 <= character && character <= 43347 || 43359 <= character && character <= 43388 || 43392 <= character && character <= 43469 || 43471 <= character && character <= 43481 || 43486 <= character && character <= 43518 || 43520 <= character && character <= 43574 || 43584 <= character && character <= 43597 || 43600 <= character && character <= 43609 || 43612 <= character && character <= 43714 || 43739 <= character && character <= 43766 || 43777 <= character && character <= 43782 || 43785 <= character && character <= 43790 || 43793 <= character && character <= 43798 || 43808 <= character && character <= 43814 || 43816 <= character && character <= 43822 || 43824 <= character && character <= 43883 || 43888 <= character && character <= 44013 || 44016 <= character && character <= 44025 || 44032 <= character && character <= 55203 || 55216 <= character && character <= 55238 || 55243 <= character && character <= 55291 || 63744 <= character && character <= 64109 || 64112 <= character && character <= 64217 || 64256 <= character && character <= 64262 || 64275 <= character && character <= 64279 || 64285 <= character && character <= 64310 || 64312 <= character && character <= 64316 || character == 64318 || 64320 <= character && character <= 64321 || 64323 <= character && character <= 64324 || 64326 <= character && character <= 64449 || 64467 <= character && character <= 64831 || 64848 <= character && character <= 64911 || 64914 <= character && character <= 64967 || 65008 <= character && character <= 65021 || 65024 <= character && character <= 65049 || 65056 <= character && character <= 65106 || 65108 <= character && character <= 65126 || 65128 <= character && character <= 65131 || 65136 <= character && character <= 65140 || 65142 <= character && character <= 65276 || 65281 <= character && character <= 65470 || 65474 <= character && character <= 65479 || 65482 <= character && character <= 65487 || 65490 <= character && character <= 65495 || 65498 <= character && character <= 65500 || 65504 <= character && character <= 65510 || 65512 <= character && character <= 65518 || 65532 <= character && character <= 65533 || 65536 <= character && character <= 65547 || 65549 <= character && character <= 65574 || 65576 <= character && character <= 65594 || 65596 <= character && character <= 65597 || 65599 <= character && character <= 65613 || 65616 <= character && character <= 65629 || 65664 <= character && character <= 65786 || 65792 <= character && character <= 65794 || 65799 <= character && character <= 65843 || 65847 <= character && character <= 65934 || 65936 <= character && character <= 65948 || character == 65952 || 66000 <= character && character <= 66045 || 66176 <= character && character <= 66204 || 66208 <= character && character <= 66256 || 66272 <= character && character <= 66299 || 66304 <= character && character <= 66339 || 66349 <= character && character <= 66378 || 66384 <= character && character <= 66426 || 66432 <= character && character <= 66461 || 66463 <= character && character <= 66499 || 66504 <= character && character <= 66517 || 66560 <= character && character <= 66717 || 66720 <= character && character <= 66729 || 66736 <= character && character <= 66771 || 66776 <= character && character <= 66811 || 66816 <= character && character <= 66855 || 66864 <= character && character <= 66915 || character == 66927 || 67072 <= character && character <= 67382 || 67392 <= character && character <= 67413 || 67424 <= character && character <= 67431 || 67584 <= character && character <= 67589 || character == 67592 || 67594 <= character && character <= 67637 || 67639 <= character && character <= 67640 || character == 67644 || 67647 <= character && character <= 67669 || 67671 <= character && character <= 67742 || 67751 <= character && character <= 67759 || 67808 <= character && character <= 67826 || 67828 <= character && character <= 67829 || 67835 <= character && character <= 67867 || 67871 <= character && character <= 67897 || character == 67903 || 67968 <= character && character <= 68023 || 68028 <= character && character <= 68047 || 68050 <= character && character <= 68099 || 68101 <= character && character <= 68102 || 68108 <= character && character <= 68115 || 68117 <= character && character <= 68119 || 68121 <= character && character <= 68149 || 68152 <= character && character <= 68154 || 68159 <= character && character <= 68168 || 68176 <= character && character <= 68184 || 68192 <= character && character <= 68255 || 68288 <= character && character <= 68326 || 68331 <= character && character <= 68342 || 68352 <= character && character <= 68405 || 68409 <= character && character <= 68437 || 68440 <= character && character <= 68466 || 68472 <= character && character <= 68497 || 68505 <= character && character <= 68508 || 68521 <= character && character <= 68527 || 68608 <= character && character <= 68680 || 68736 <= character && character <= 68786 || 68800 <= character && character <= 68850 || 68858 <= character && character <= 68903 || 68912 <= character && character <= 68921 || 69216 <= character && character <= 69246 || 69248 <= character && character <= 69289 || 69291 <= character && character <= 69293 || 69296 <= character && character <= 69297 || 69376 <= character && character <= 69415 || 69424 <= character && character <= 69465 || 69552 <= character && character <= 69579 || 69600 <= character && character <= 69622 || 69632 <= character && character <= 69709 || 69714 <= character && character <= 69743 || 69759 <= character && character <= 69820 || 69822 <= character && character <= 69825 || 69840 <= character && character <= 69864 || 69872 <= character && character <= 69881 || 69888 <= character && character <= 69940 || 69942 <= character && character <= 69959 || 69968 <= character && character <= 70006 || 70016 <= character && character <= 70111 || 70113 <= character && character <= 70132 || 70144 <= character && character <= 70161 || 70163 <= character && character <= 70206 || 70272 <= character && character <= 70278 || character == 70280 || 70282 <= character && character <= 70285 || 70287 <= character && character <= 70301 || 70303 <= character && character <= 70313 || 70320 <= character && character <= 70378 || 70384 <= character && character <= 70393 || 70400 <= character && character <= 70403 || 70405 <= character && character <= 70412 || 70415 <= character && character <= 70416 || 70419 <= character && character <= 70440 || 70442 <= character && character <= 70448 || 70450 <= character && character <= 70451 || 70453 <= character && character <= 70457 || 70459 <= character && character <= 70468 || 70471 <= character && character <= 70472 || 70475 <= character && character <= 70477 || character == 70480 || character == 70487 || 70493 <= character && character <= 70499 || 70502 <= character && character <= 70508 || 70512 <= character && character <= 70516 || 70656 <= character && character <= 70747 || 70749 <= character && character <= 70753 || 70784 <= character && character <= 70855 || 70864 <= character && character <= 70873 || 71040 <= character && character <= 71093 || 71096 <= character && character <= 71133 || 71168 <= character && character <= 71236 || 71248 <= character && character <= 71257 || 71264 <= character && character <= 71276 || 71296 <= character && character <= 71352 || 71360 <= character && character <= 71369 || 71424 <= character && character <= 71450 || 71453 <= character && character <= 71467 || 71472 <= character && character <= 71487 || 71680 <= character && character <= 71739 || 71840 <= character && character <= 71922 || 71935 <= character && character <= 71942 || character == 71945 || 71948 <= character && character <= 71955 || 71957 <= character && character <= 71958 || 71960 <= character && character <= 71989 || 71991 <= character && character <= 71992 || 71995 <= character && character <= 72006 || 72016 <= character && character <= 72025 || 72096 <= character && character <= 72103 || 72106 <= character && character <= 72151 || 72154 <= character && character <= 72164 || 72192 <= character && character <= 72263 || 72272 <= character && character <= 72354 || 72384 <= character && character <= 72440 || 72704 <= character && character <= 72712 || 72714 <= character && character <= 72758 || 72760 <= character && character <= 72773 || 72784 <= character && character <= 72812 || 72816 <= character && character <= 72847 || 72850 <= character && character <= 72871 || 72873 <= character && character <= 72886 || 72960 <= character && character <= 72966 || 72968 <= character && character <= 72969 || 72971 <= character && character <= 73014 || character == 73018 || 73020 <= character && character <= 73021 || 73023 <= character && character <= 73031 || 73040 <= character && character <= 73049 || 73056 <= character && character <= 73061 || 73063 <= character && character <= 73064 || 73066 <= character && character <= 73102 || 73104 <= character && character <= 73105 || 73107 <= character && character <= 73112 || 73120 <= character && character <= 73129 || 73440 <= character && character <= 73464 || character == 73648 || 73664 <= character && character <= 73713 || 73727 <= character && character <= 74649 || 74752 <= character && character <= 74862 || 74864 <= character && character <= 74868 || 74880 <= character && character <= 75075 || 77824 <= character && character <= 78894 || 82944 <= character && character <= 83526 || 92160 <= character && character <= 92728 || 92736 <= character && character <= 92766 || 92768 <= character && character <= 92777 || 92782 <= character && character <= 92783 || 92880 <= character && character <= 92909 || 92912 <= character && character <= 92917 || 92928 <= character && character <= 92997 || 93008 <= character && character <= 93017 || 93019 <= character && character <= 93025 || 93027 <= character && character <= 93047 || 93053 <= character && character <= 93071 || 93760 <= character && character <= 93850 || 93952 <= character && character <= 94026 || 94031 <= character && character <= 94087 || 94095 <= character && character <= 94111 || 94176 <= character && character <= 94180 || 94192 <= character && character <= 94193 || 94208 <= character && character <= 100343 || 100352 <= character && character <= 101589 || 101632 <= character && character <= 101640 || 110592 <= character && character <= 110878 || 110928 <= character && character <= 110930 || 110948 <= character && character <= 110951 || 110960 <= character && character <= 111355 || 113664 <= character && character <= 113770 || 113776 <= character && character <= 113788 || 113792 <= character && character <= 113800 || 113808 <= character && character <= 113817 || 113820 <= character && character <= 113823 || 118784 <= character && character <= 119029 || 119040 <= character && character <= 119078 || 119081 <= character && character <= 119154 || 119163 <= character && character <= 119272 || 119296 <= character && character <= 119365 || 119520 <= character && character <= 119539 || 119552 <= character && character <= 119638 || 119648 <= character && character <= 119672 || 119808 <= character && character <= 119892 || 119894 <= character && character <= 119964 || 119966 <= character && character <= 119967 || character == 119970 || 119973 <= character && character <= 119974 || 119977 <= character && character <= 119980 || 119982 <= character && character <= 119993 || character == 119995 || 119997 <= character && character <= 120003 || 120005 <= character && character <= 120069 || 120071 <= character && character <= 120074 || 120077 <= character && character <= 120084 || 120086 <= character && character <= 120092 || 120094 <= character && character <= 120121 || 120123 <= character && character <= 120126 || 120128 <= character && character <= 120132 || character == 120134 || 120138 <= character && character <= 120144 || 120146 <= character && character <= 120485 || 120488 <= character && character <= 120779 || 120782 <= character && character <= 121483 || 121499 <= character && character <= 121503 || 121505 <= character && character <= 121519 || 122880 <= character && character <= 122886 || 122888 <= character && character <= 122904 || 122907 <= character && character <= 122913 || 122915 <= character && character <= 122916 || 122918 <= character && character <= 122922 || 123136 <= character && character <= 123180 || 123184 <= character && character <= 123197 || 123200 <= character && character <= 123209 || 123214 <= character && character <= 123215 || 123584 <= character && character <= 123641 || character == 123647 || 124928 <= character && character <= 125124 || 125127 <= character && character <= 125142 || 125184 <= character && character <= 125259 || 125264 <= character && character <= 125273 || 125278 <= character && character <= 125279 || 126065 <= character && character <= 126132 || 126209 <= character && character <= 126269 || 126464 <= character && character <= 126467 || 126469 <= character && character <= 126495 || 126497 <= character && character <= 126498 || character == 126500 || character == 126503 || 126505 <= character && character <= 126514 || 126516 <= character && character <= 126519 || character == 126521 || character == 126523 || character == 126530 || character == 126535 || character == 126537 || character == 126539 || 126541 <= character && character <= 126543 || 126545 <= character && character <= 126546 || character == 126548 || character == 126551 || character == 126553 || character == 126555 || character == 126557 || character == 126559 || 126561 <= character && character <= 126562 || character == 126564 || 126567 <= character && character <= 126570 || 126572 <= character && character <= 126578 || 126580 <= character && character <= 126583 || 126585 <= character && character <= 126588 || character == 126590 || 126592 <= character && character <= 126601 || 126603 <= character && character <= 126619 || 126625 <= character && character <= 126627 || 126629 <= character && character <= 126633 || 126635 <= character && character <= 126651 || 126704 <= character && character <= 126705 || 126976 <= character && character <= 127019 || 127024 <= character && character <= 127123 || 127136 <= character && character <= 127150 || 127153 <= character && character <= 127167 || 127169 <= character && character <= 127183 || 127185 <= character && character <= 127221 || 127232 <= character && character <= 127405 || 127462 <= character && character <= 127490 || 127504 <= character && character <= 127547 || 127552 <= character && character <= 127560 || 127568 <= character && character <= 127569 || 127584 <= character && character <= 127589 || 127744 <= character && character <= 128727 || 128736 <= character && character <= 128748 || 128752 <= character && character <= 128764 || 128768 <= character && character <= 128883 || 128896 <= character && character <= 128984 || 128992 <= character && character <= 129003 || 129024 <= character && character <= 129035 || 129040 <= character && character <= 129095 || 129104 <= character && character <= 129113 || 129120 <= character && character <= 129159 || 129168 <= character && character <= 129197 || 129200 <= character && character <= 129201 || 129280 <= character && character <= 129400 || 129402 <= character && character <= 129483 || 129485 <= character && character <= 129619 || 129632 <= character && character <= 129645 || 129648 <= character && character <= 129652 || 129656 <= character && character <= 129658 || 129664 <= character && character <= 129670 || 129680 <= character && character <= 129704 || 129712 <= character && character <= 129718 || 129728 <= character && character <= 129730 || 129744 <= character && character <= 129750 || 129792 <= character && character <= 129938 || 129940 <= character && character <= 129994 || 130032 <= character && character <= 130041 || 131072 <= character && character <= 173789 || 173824 <= character && character <= 177972 || 177984 <= character && character <= 178205 || 178208 <= character && character <= 183969 || 183984 <= character && character <= 191456 || 194560 <= character && character <= 195101 || 196608 <= character && character <= 201546 || 917760 <= character && character <= 917999 || false) { return true; }
+		return false;
+	}
+	bool pystr::isCharSpace() const {
+		pystr character = (*this)[0];
+		if (9 <= character && character <= 13 || 28 <= character && character <= 32 || character == 133 || character == 160 || character == 5760 || 8192 <= character && character <= 8202 || 8232 <= character && character <= 8233 || character == 8239 || character == 8287 || character == 12288 || false) { return true; }
+		return false;
+	}
+
+	pystr::pystr() {
+		this->operator=("");
+	}
+	pystr::pystr(cCHAR* char_ptr) {
+		this->operator=(char_ptr);
+	}
+	pystr::pystr(cCHAR* char_ptr, int length) {
+		this->CharPtr2Data(char_ptr, length);
+	}
+	pystr::pystr(cCHAR character) {
+		this->operator=(character);
+	}
+	pystr::pystr(cWCHAR* wchar_ptr) {
+		this->operator=(wchar_ptr);
+	}
+#pragma warning(push)
+#pragma warning(disable:4996)
+	pystr::pystr(cWCHAR* wchar_ptr, int length) {
+		int idx = 0;
+		int null_idx = length;
+		while (this->isIdxOver(null_idx)) this->ExtendVolume();
+		for (int idx = 0; idx < length; idx++) {
+			this->data_[idx] = wchar_ptr[idx];
+		}
+		this->data_[null_idx] = '\0';
+		this->length_ = null_idx;
+	}
+#pragma warning(pop)
+	pystr::pystr(cWCHAR wchar) {
+		this->operator=(wchar);
+	}
+	pystr::pystr(cINT unicode) {
+		this->operator=(chr(unicode));
+	}
+	pystr::pystr(cPYSTR& ps) {
+		//same as pystr::operator=(str)
+		int null_idx = ps.length_;
+		for (int idx = 0; idx < null_idx; idx++) {
+			while (isIdxOver(idx)) this->ExtendVolume();
+			this->data_[idx] = ps.data_[idx];
+		}
+		while (isIdxOver(null_idx)) this->ExtendVolume();
+		this->data_[null_idx] = '\0';
+		this->length_ = null_idx;
+	}
+	pystr::~pystr() {
+		free(this->data_);
+	}
+
+	cWCHAR* pystr::begin() const {
+		return this->data_;
+	}
+	cWCHAR* pystr::end() const {
+		return (this->data_) + this->length_;
+	}
+	char* pystr::c_str() const {
+		return this->Data2CharPtr();
+	}
+
+	bool pystr::in_(cPYSTR value) {
+		return (this->find(value) != -1);
+	}
+
+	pystr pystr::capitalize() const {
+		return (*this)[0].upper() + (*this)(1,"").lower();
+	}
+	pystr pystr::casefold() const {
+		pystr ret_value;
+		for (pystr element : *this) {
+			ret_value += element.casefoldChar();
 		}
 		return ret_value;
 	}
+	pystr pystr::center(cINT length, cPYSTR& character) const {
+		if (character.length_ != 1) TypeError("The fill character must be exactly one character long");
+		int len = this->length_;
+		pystr ret_value = (character * (((length + 1) / 2) - ((len + 1) / 2))) + *this;
 
-	template <class T> void pylist<T>::RemveNode(lnode<T>* node_ptr) {
-		if (node_ptr->prev_ == nullptr)	this->head_ = node_ptr->next_;
-		else								node_ptr->prev_->next_ = node_ptr->next_;
-		if (node_ptr->next_ == nullptr)	this->tail_ = node_ptr->prev_;
-		else								node_ptr->next_->prev_ = node_ptr->prev_;
-		
-		free(node_ptr);
-		this->size_--;
-		this->is_changed_ = true;
+		ret_value += character * (length - ret_value.length_);
+		return ret_value;
 	}
-
-	template <class T> void pylist<T>::SetRangeData() {
-		int size = this->size_;
-		if (this->range_volume_ == 0) {
-			this->range_data_ = (T*)calloc(size, sizeof(T) * size);
-			this->range_volume_ = size;
+	int pystr::count(cPYSTR& value, cINT start) const {
+		return this->count(value, start, this->length_);
+	}
+	int pystr::count(cPYSTR& value, cINT start, cINT end) const {
+		int count = 0;
+		pystr target = (*this)(start, end);
+		int value_len = value.length_;
+		while (1) {
+			int idx = target.find(value);
+			if (idx == -1) return count;
+			count++;
+			if (idx + value_len >= target.length_) return count;
+			target = target(idx + value_len, "");
 		}
-		else {
-			while (this->range_volume_ < size) this->range_volume_ *= 2;
-			while (1) {
-				T* temp = (T*)realloc(this->range_data_, sizeof(T) * this->range_volume_);
-				if (temp != NULL) {
-					this->range_data_ = temp;
-					break;
+	}
+	bool pystr::endswith(cPYSTR& value, cINT start) const {
+		return this->endswith(value, start, this->length_);
+	}
+	bool pystr::endswith(cPYSTR& value, cINT start, cINT end) const {
+		return (*this)[end - 1] == value;
+	}
+	pystr pystr::expandtabs(cINT tabsize) const {
+		return this->replace("\t", " "p * (tabsize - (tabsize > 1) ? 1 : 0));
+	}
+	int pystr::find(cPYSTR& value, cINT start) const {
+		return this->find(value, start, this->length_);
+	}
+	int pystr::find(cPYSTR& value, cINT start, cINT end) const {
+		pystr target = (*this)(start, end);
+		wchar_t* char_ptr = wcsstr(target.data_, value.data_);
+		if (char_ptr == nullptr) return -1;
+		return (char_ptr - target.data_) + start;
+	}
+	int pystr::index(cPYSTR& value, cINT start) const {
+		return this->index(value, start, this->length_);
+	}
+	int pystr::index(cPYSTR& value, cINT start, cINT end) const {
+		int idx = this->find(value, start, end);
+		if (idx == -1) ValueError("substring not found");
+		return idx;
+	}
+	bool pystr::isalnum() const {
+		if (this->length_ == 0) return false;
+		for (pystr element : *this) {
+			if (element.isCharAlnum() == true) continue;
+			return false;
+		}
+		return true;
+	}
+	bool pystr::isalpha() const {
+		if (this->length_ == 0) return false;
+		for (pystr element : *this) {
+			if (element.isCharAlpha() == true) continue;
+			return false;
+		}
+		return true;
+	}
+	bool pystr::isAscii() const {
+		if (this->length_ == 0) return false;
+		for (pystr element : *this) {
+			if (element.isCharAscii() == true) continue;
+			return false;
+		}
+		return true;
+	}
+	bool pystr::isdigit() const {
+		if (this->length_ == 0) return false;
+		for (pystr element : *this) {
+			if (element.isCharDigit() == true) continue;
+			return false;
+		}
+		return true;
+	}
+	bool pystr::isdecimal() const {
+		if (this->length_ == 0) return false;
+		for (pystr element : *this) {
+			if (element.isCharDecimal() == true) continue;
+			return false;
+		}
+		return true;
+	}
+	bool pystr::islower() const {
+		return *this == this->lower();
+	}
+	bool pystr::isnumeric() const {
+		if (this->length_ == 0) return false;
+		for (pystr element : *this) {
+			if (element.isCharNumeric() == true) continue;
+			return false;
+		}
+		return true;
+	}
+	bool pystr::isprintable() const {
+		if (this->length_ == 0) return false;
+		for (pystr element : *this) {
+			if (element.isCharPrintable() == true) continue;
+			return false;
+		}
+		return true;
+	}
+	bool pystr::isspace() const {
+		if (this->length_ == 0) return false;
+		for (pystr element : *this) {
+			if (element.isCharSpace() == true) continue;
+			return false;
+		}
+		return true;
+	}
+	bool pystr::istitle() const {
+		return *this == this->title();
+	}
+	bool pystr::isupper() const {
+		return *this == this->upper();
+	}
+	pystr pystr::join(cPYSTR& iterable) const {
+		int len = iterable.length_;
+		pystr ret_value = iterable[0];
+		if (len == 0) return ret_value;
+		for (int idx = 1; idx < len; idx++) {
+			ret_value += this->data_;
+			ret_value += iterable[idx];
+		}
+		return ret_value;
+	}
+	pystr pystr::join(pylist<pystr> iterable) const {
+		int length = len(iterable);
+		pystr ret_value;
+		if (length == 0) return ret_value;
+		ret_value += *iterable[0];
+		for (int idx = 1; idx < length; idx++) {
+			ret_value += this->data_;
+			ret_value += *iterable[idx];
+		}
+		return ret_value;
+	}
+	pystr pystr::ljust(cINT length, cPYSTR& character) const {
+		if (character.length_ != 1) TypeError("The fill character must be exactly one character long");
+		return this->data_ + character * (length - this->length_);
+	}
+	pystr pystr::lower() const {
+		pystr ret_value;
+		for(pystr element : *this) {
+			ret_value += element.lowerChar();
+		}
+		return ret_value;
+	}
+	pystr pystr::lstrip() const {
+		pystr cmp = " \t"p;
+		int idx = 0, len = this->length_;
+		while (idx < len && cmp.in_((*this)[idx])) idx++;
+		if (idx == len) return "";
+		return this->operator()(idx, "");
+	}
+	std::map<pystr, pystr> pystr::maketrance(cPYSTR& x, cPYSTR& y, cPYSTR& z) const {
+		if (x.length_ != y.length_) ValueError("the first two maketrans arguments must have equal length");
+		std::map<pystr, pystr> ret_value;
+		for (int idx = 0; idx < x.length_; idx++) {
+			ret_value[x[idx]] = y[idx];
+		}
+		for (int idx = 0; idx < z.length_; idx++) {
+			ret_value[z[idx]] = '\0';
+		}
+		return ret_value;
+	}
+	pylist<pystr> pystr::partition(cPYSTR& value) const {
+		int idx = this->find(value);
+		if (idx == -1) idx = this->length_;
+		return { (*this)("",idx), value, (*this)(idx + value.length_,"") };
+	}
+	pystr pystr::replace(cPYSTR& oldvalue, cPYSTR& newvalue) const {
+		return this->replace(oldvalue, newvalue, this->length_);
+	}
+	pystr pystr::replace(cPYSTR& oldvalue, cPYSTR& newvalue, cINT count) const {
+		pystr ret_value;
+		pystr target = *this;
+		int oldvalue_len = oldvalue.length_;
+		int cnt = count;
+		while (1) {
+			int idx = target.find(oldvalue);
+			if (idx == -1 || cnt <= 0) return ret_value + target;
+
+			ret_value += target("", idx) + newvalue;
+			target = target(idx + oldvalue_len, "");
+			cnt--;
+		}
+	}
+	int pystr::rfind(cPYSTR& _Str, cINT start) const {
+		return this->rfind(_Str, start, this->length_);
+	}
+	int pystr::rfind(cPYSTR& value, cINT start, cINT end) const {
+		//kmp algorithm
+		int value_len = value.length_, j = 0;
+		pylist<int> kmp_pi(value_len, 0); //get pi array
+		for (int i = value_len - 1; i >= 0; i--) {
+			while (j > 0 && value[i] != value[j]) j = *kmp_pi[j - 1];
+			if (value[i] == value[j] && i != j) *kmp_pi[i] = ++j;
+		}
+
+		//find string
+		pystr target = (*this)(start, end);
+		int target_len = target.length_;
+		j = 0;
+		for (int i = target_len - 1; i >= 0; i--) {
+			while (j > 0 && target[i] != value[j])  j = *kmp_pi[j - 1];
+			if (target[i] == value[j]) {
+				if (j == value_len - 1) return i + start;
+				j++;
+			}
+		}
+		return -1;
+	}
+	int pystr::rindex(cPYSTR& value, cINT start) const {
+		return this->rindex(value, start, this->length_);
+	}
+	int pystr::rindex(cPYSTR& value, cINT start, cINT end) const {
+		int idx = this->rfind(value, start, end);
+		if (idx == -1) ValueError("substring not found");
+		return idx;
+	}
+	pystr pystr::rjust(cINT length, cPYSTR& character) const {
+		if (character.length_ != 1) TypeError("The fill character must be exactly one character long");
+		return character * (length - this->length_) + this->data_;
+	}
+	pylist<pystr> pystr::rpartition(cPYSTR& value) const {
+		int idx = this->rfind(value);
+		if (idx == -1) idx = this->length_;
+		return { (*this)("",idx), value, (*this)(idx + value.length_,"") };
+	}
+	pystr pystr::rstrip() const {
+		pystr cmp = " \t"p;
+		int idx = this->length_;
+		while (idx > 0 && cmp.in_((*this)[idx - 1])) idx--;
+		if (idx == 0) return "";
+		return (*this)(0, idx);
+	}
+	pylist<pystr> pystr::split(cPYSTR& separator) const {
+		return this->split(separator, this->length_);
+	}
+	pylist<pystr> pystr::split(cPYSTR& separator, cINT maxsplit) const {
+		pylist<pystr> ret_value;
+		pystr target = *this;
+		int separator_len = separator.length_;
+		if (separator_len == 0) ValueError("empty separator");
+		int count = maxsplit;
+		while (1) {
+			int idx = target.find(separator);
+			if (count-- && idx == -1) {
+				ret_value.append(target);
+				return ret_value;
+			}
+			ret_value.append(target("", idx));
+			target = target(idx + separator_len, "");
+		}
+	}
+	pylist<pystr> pystr::splitlines(const bool keeplinebreaks) const {
+		pystr ret_value;
+		if (keeplinebreaks == true) ret_value = this->replace('\n', "@\n\n");
+		else						ret_value = this->replace('\n', "@\n");
+		return ret_value.split("@\n");
+	}
+	bool pystr::startwith(cPYSTR& value, cINT start) const {
+		return this->startwith(value, start, this->length_);
+	}
+	bool pystr::startwith(cPYSTR& value, cINT start, cINT end) const {
+		return (*this)[start] == value;
+	}
+	pystr pystr::strip() const {
+		return this->lstrip().rstrip();
+	}
+	pystr pystr::swapcase() const {
+		pystr ret_value;
+		pystr result;
+		int len = this->length_;
+		for (pystr element : *this) {
+			if (element != (result = element.lowerChar())) {
+				ret_value += result;
+			}
+			else ret_value += element.upperChar();
+		}
+		return ret_value;
+	}
+	pystr pystr::title() const {
+		pystr ret_value;
+		pystr cmp = " \n\t\0";
+		bool upper = true;
+		int len = this->length_;
+		for (pystr element : *this) {
+			if (cmp.in_(element)) {
+				upper = true;
+			}
+			else if (upper == true) {
+				element = element.upperChar();
+				upper = false;
+			}
+			else {
+				element = element.lowerChar();
+			}
+			ret_value += element;
+		}
+		return ret_value;
+	}
+	pystr pystr::translate(const std::map<pystr, pystr> table) const {
+		pystr ret_value;
+		int len = this->length_;
+		for (int idx = 0; idx < len; idx++) {
+			bool has_add = false;
+			for (std::map<pystr, pystr>::const_iterator iter = table.begin(); iter != table.end(); iter++) {
+				if ((*this)[idx] == iter->first) {
+					if (iter->second == '\0') {
+						ret_value += iter->second;
+						has_add = true;
+						break;
+					}
 				}
 			}
+			if (has_add == false) ret_value += (*this)[idx];
 		}
-
-		lnode<T>* node = this->head_;
-		int idx = 0;
-		while(node != nullptr) {
-			this->range_data_[idx] = node->range_data_;
-			node = node->next_;
-			idx++;
+		return ret_value.replace('\0',"");
+	}
+	pystr pystr::upper() const {
+		pystr ret_value;
+		for (pystr element : *this) {
+			ret_value += element.upperChar();
 		}
-		this->is_changed_ = false;
-	}
-
-	template <class T> pylist<T>::pylist() {}
-	template <class T> pylist<T>::pylist(int count, T value) {
-		if (count < 0) return;
-		while (count--) {
-			this->append(value);
-		}
-	}
-	template <class T> pylist<T>::pylist(initializer_list<T> value) {
-		*this = value;
-	}
-	template <class T> pylist<T>::pylist(const pylist<T>& value) {
-		*this = value;
-	}
-
-	template <class T> pylist<T>::~pylist() {
-		this->clear();
-	}
-
-	template <class T> T* pylist<T>::begin() {
-		if (this->is_changed_) this->SetRangeData();
-		return &this->range_data_[0];
-	}
-	template <class T> T* pylist<T>::end() {
-		if (this->is_changed_) this->SetRangeData();
-		return &this->range_data_[this->size_];
-	}
-
-	template <class T> pylist<T>& pylist<T>::append(const T& value) {
-		lnode<T>* new_node = this->MakeNewNode(value);
-		new_node->prev_ = this->tail_;
-		if (this->tail_ != nullptr) this->tail_->next_ = new_node;
-		this->tail_ = new_node;
-		if (this->head_ == nullptr) this->head_ = new_node;
-		return *this;
-	}
-	template <class T> T pylist<T>::pop(int idx) {
-		this->SetIdx(&idx);
-		this->isIdxOutOfRange(idx);
-
-		lnode<T>* node = this->FindNode(idx);
-		T ret_value = node->range_data_;
-		this->RemveNode(node);
-
 		return ret_value;
 	}
-	template <class T> pylist<T>& pylist<T>::del(int idx) {
+	pystr pystr::zfill(cINT len) const {
+		return this->rjust(len, "0");
+	}
+
+	pystr pystr::operator[](cINT index) const {
+		int idx = index;
 		this->SetIdx(&idx);
 		this->isIdxOutOfRange(idx);
+		return this->data_[idx];
+	};
+	pystr pystr::operator()(cINT start, cINT end, cINT step) const {
+		int idx = start;
+		int _end = end;
+		this->SetResizedIdx(&idx);
+		this->SetResizedIdx(&_end);
 
-		return *this = (*this)("", idx) + (*this)(idx + 1, "");
-	}
-	template <class T> pylist<T>& pylist<T>::del(const int start, const int end, const int step) {
-		int idx = start, idx_end = end;
-		this->SetIdx(&idx);
-		this->SetIdx(&idx_end);
-		this->isIdxOutOfRange(idx);
-		this->isIdxOutOfRange(idx_end - ((idx_end > 0) ? 1 : 0));
-
-		lnode<T>* node = this->FindNode(idx);
-		if (!(idx < idx_end)) return *this;
-		while (1) {
-			lnode<T>* next = node->next_;
-			this->RemveNode(node); idx_end--;
-			node = next;
-			idx += step - 1;
-			if (!(idx < idx_end)) return *this;
-			if (this->size_ - idx > step - 1) {
-				int step_cnt = step - 1;
-				while (step_cnt--) node = node->next_;
-			}
-			else node = this->FindNode(idx);
-		}
-	}
-	template <class T> pylist<T>& pylist<T>::del(const char* start, const int end, const int step) {
-		return this->del(0, end, step);
-	}
-	template <class T> pylist<T>& pylist<T>::del(const int start, const char* end, const int step) {
-		return this->del(start, this->size_, step);
-	}
-	template <class T> pylist<T>& pylist<T>::del(const char* start, const char* end, const int step) {
-		return this->del(0, this->size_, step);
-	}
-	template <class T> pylist<T>& pylist<T>::sort() {
-		int size = this->size_;
-		T* sorted_list = (T*)calloc(size, sizeof(T) * size);
-		for (int idx = 0; idx < size; idx++) {
-			sorted_list[idx] = this->pop(0);
-		}
-		std::sort(sorted_list, sorted_list + size);
-		for (int idx = 0; idx < size; idx++) {
-			this->append(sorted_list[idx]);
-		}
-		return *this;
-	}
-	template <class T> pylist<T>& pylist<T>::reverse() {
-		pylist<T> ret_value;
-		while (this->size_) {
-			ret_value.append(this->pop());
-		}
-		return *this = ret_value;
-	}
-	template <class T> int pylist<T>::index(T value) {
-		int idx = 0;
-		lnode<T>* node = this->head_;
-		while (node != nullptr) {
-			if (node->range_data_ == value) return idx;
-			node = node->next_;
-			idx++;
-		}
-		throw py::to_py("ValueError: value not in list");
-	}
-	template <class T> pylist<T>& pylist<T>::insert(int idx, T value) {
-		this->SetIdx(&idx);
-		this->isIdxOutOfRange(idx - ((idx > 0) ? 1 : 0));
-
-		if (idx == this->size_) {
-			this->append(value);
-		}
-		else {
-			lnode<T>* node = this->FindNode(idx);
-			lnode<T>* new_node = this->MakeNewNode(value);
-			new_node->next_ = node;
-			new_node->prev_ = node->prev_;
-			if (node->prev_ != nullptr) node->prev_->next_ = new_node;
-			else this->head_ = new_node;
-			node->prev_ = new_node;
-		}
-		return *this;
-	}
-	template <class T> pylist<T>& pylist<T>::remove(T value) {
-		this->pop(this->index(value));
-		return *this;
-	}
-	template <class T> int pylist<T>::count(T value) {
-		int count = 0;
-		lnode<T>* node = this->head_;
-		while (node != nullptr) {
-			if (node->range_data_ == value) count++;
-			node = node->next_;
-		}
-		return count;
-	}
-	template <class T> pylist<T>& pylist<T>::extend(pylist<T> _List) {
-		return (*this) += _List;
-	}
-	template <class T> pylist<T> pylist<T>::copy() const {
-		pylist<T> ret_value = *this;
-		return ret_value;
-	}
-	template <class T> pylist<T>& pylist<T>::clear() {
-		while (this->size_) this->pop();
-		return *this;
-	}
-
-	template <class T> T* pylist<T>::operator[](int idx) const {
-		this->SetIdx(&idx);
-		this->isIdxOutOfRange(idx);
-
-		return &(this->FindNode(idx)->range_data_);
-	}
-	template <class T> pylist<T>& pylist<T>::operator=(initializer_list<T> right) {
-		this->clear();
-		for (T element : right) {
-			this->append(element);
-		}
-		return *this;
-	}
-	template <class T> pylist<T>& pylist<T>::operator=(const pylist<T>& right) {
-		this->clear();
-		lnode<T>* node = right.head_;
-		while(node != nullptr) {
-			this->append(node->range_data_);
-			node = node->next_;
-		}
-		return *this;
-	}
-	template <class T> pylist<T>& pylist<T>::operator+=(const pylist<T>& right) {
-		pylist<T> temp = right;
-		this->tail_->next_ = temp.head_;
-		temp.head_->prev_ = this->tail_;
-		this->tail_ = temp.tail_;
-
-		this->size_ += temp.size_;
-		this->is_changed_ = true;
-		
-		temp.head_ = nullptr; temp.tail_ = nullptr;
-		temp.size_ = 0;
-		return *this;
-	}
-	template <class T> pylist<T> pylist<T>::operator*(int value) const {
-		if (value <= 0) return {};
-		pylist<T> ret_value = *this;
-		int rest_count = 0;
-		while (value > 1) {
-			ret_value += ret_value;
-			if (value % 2) rest_count++;
-			value /= 2;
-		}
-		while (rest_count--) ret_value += *this;
-		return ret_value;
-	}
-
-	template <class T> pylist<T> pylist<T>::operator()(const int start, const int end, const int step) const {
-		int idx = start, idx_end = end;
-		this->SetIdx(&idx);
-		this->SetIdx(&idx_end);
-		this->isIdxOutOfRange(idx);
-		this->isIdxOutOfRange(idx_end - ((idx_end > 0) ? 1 : 0));
-
-		pylist<T> ret_value;
-		int size = this->size_;
-		lnode<T>* node = this->FindNode(idx);
-		if (!(idx < idx_end)) return ret_value;
-		while (1) {
-			ret_value.append(node->range_data_);
-			
+		pystr ret_value;
+		while (idx < _end) {
+			ret_value += this->data_[idx];
 			idx += step;
-			if (!(idx < idx_end)) return ret_value;
-			if (size - idx > step) {
-				int stepcount = step;
-				while (stepcount--) node = node->next_;
-			}
-			else node = this->FindNode(idx);
 		}
-	}
-	template <class T> pylist<T> pylist<T>::operator()(const char* start, const int end, const int step) const {
+		return ret_value;
+	};
+	pystr pystr::operator()(cCHAR* start, cINT end, cINT step) const {
 		return (*this)(0, end, step);
 	}
-	template <class T> pylist<T> pylist<T>::operator()(const int start, const char* end, const int step) const {
-		return (*this)(start, this->size_, step);
+	pystr pystr::operator()(cINT start, cCHAR* end, cINT step) const {
+		return (*this)(start, this->length_, step);
 	}
-	template <class T> pylist<T> pylist<T>::operator()(const char* start, const char* end, const int step) const {
-		return (*this)(0, this->size_, step);
+	pystr pystr::operator()(cCHAR* start, cCHAR* end, cINT step) const {
+		return (*this)(0, this->length_, step);
 	}
 
-	template <class T> int len(const pylist<T> value) {
-		return value.size_;
+#pragma warning(push)
+#pragma warning(disable: 4996)
+	pystr& pystr::operator=(cPYSTR& right) {
+		int null_idx = right.length_;
+		while (this->isIdxOver(null_idx)) this->ExtendVolume();
+		wcscpy(this->data_, right.data_);
+		this->data_[null_idx] = '\0';
+		this->length_ = null_idx;
+		return *this;
 	}
+	pystr& pystr::operator=(cCHAR* right) {
+		return this->CharPtr2Data(right, strlen(right));
+	}
+	pystr& pystr::operator=(cCHAR right) {
+		char char2pystr[2] = { right, '\0' };
+		return this->operator=(char2pystr);
+	}
+	pystr& pystr::operator=(cWCHAR* right) {
+		int idx = 0;
+		int null_idx = wcslen(right);
+		while (this->isIdxOver(null_idx)) this->ExtendVolume();
+		wcscpy(this->data_, right);
+		this->data_[null_idx] = '\0';
+		this->length_ = null_idx;
+		return *this;
+	}
+	pystr& pystr::operator=(cWCHAR right) {
+		while (this->isIdxOver(0)) this->ExtendVolume();
+		this->data_[0] = right;
+		this->data_[1] = '\0';
+		this->length_ = 1;
+		return *this;
+	}
+	pystr& pystr::operator+=(cPYSTR& right) {
+		int null_idx = this->length_ + right.length_;
+		while (this->isIdxOver(null_idx)) this->ExtendVolume();
+		wcscat(this->data_, right.data_);
+		this->data_[null_idx] = '\0';
+		this->length_ = null_idx;
+		return *this;
+	}
+#pragma warning(pop)
+
+	std::ostream& operator<<(std::ostream& os, cPYSTR& value) {
+		for (pystr element : value) os << element.c_str();
+		return os;
+	}
+	std::istream& operator>>(std::istream& is, pystr& target) {
+		char result;
+		pystr cmp = " \n\t\0";
+		char* ret_value = (char*)calloc(1, sizeof(char));
+		int ret_volume = 1;
+		int idx = 0;
+		while (cmp.in_(is.rdbuf()->sgetc())) is.rdbuf()->snextc();
+		while (!cmp.in_(result = is.rdbuf()->sgetc())) {
+			if (idx + 1 >= ret_volume) {
+				ret_volume *= 2;
+				while (1) {
+					char* temp = (char*)realloc(ret_value, sizeof(char) * ret_volume);
+					if (temp != NULL) {
+						ret_value = temp;
+						break;
+					}
+				}
+			}
+			ret_value[idx] = result;
+			idx++;
+			is.rdbuf()->snextc();
+		}
+		ret_value[idx] = '\0';
+		target = ret_value;
+		free(ret_value);
+		return is;
+	}
+#pragma warning(push)
+#pragma warning(disable:4455)
+	pystr operator ""p(cCHAR* char_ptr, size_t len) {
+		pystr ret_value(char_ptr, len);
+		return ret_value;
+	}
+#pragma warning(pop)
+	pystr operator+(cPYSTR& left, cPYSTR& right) {
+		pystr ret_value = left;
+		return ret_value += right;
+	}
+	bool operator==(cPYSTR& left, cPYSTR& right) {
+		return !wcscmp(left.data_, right.data_);
+	}
+	bool operator!=(cPYSTR& left, cPYSTR& right) {
+		return wcscmp(left.data_, right.data_);
+	}
+	bool operator<(cPYSTR& left, cPYSTR& right) {
+		return wcscmp(left.data_, right.data_) < 0;
+	}
+	bool operator<=(cPYSTR& left, cPYSTR& right) {
+		return wcscmp(left.data_, right.data_) <= 0;
+	}
+	bool operator>(cPYSTR& left, cPYSTR& right) {
+		return wcscmp(left.data_, right.data_) > 0;
+	}
+	bool operator>=(cPYSTR& left, cPYSTR& right) {
+		return wcscmp(left.data_, right.data_) >= 0;
+	}
+	pystr operator*(cPYSTR& left, cINT count) {
+		if (count <= 0) return ""p;
+		if (count == 1) return left;
+		return left * (count / 2) + left * (count / 2) + left * (count % 2);
+	}
+
+#pragma warning(push)
+#pragma warning(disable: 4244)
+	int len(cPYSTR& ps) {
+		return ps.length_;
+	}
+	int ord(cPYSTR& ps) {
+		if (len(ps) > 1) TypeError(("ord() expected a character, but string of length "p + str(len(ps)) + " found"p).c_str());
+		return (int)(ps.data_[0]);
+	}
+	pystr chr(cINT& unicode) {
+		if (!(0 <= unicode && unicode <= 0x10FFFF)) ValueError("chr() arg not in range(0x110000)");
+		return (wchar_t)unicode;
+	}
+	template<class T>
+	pystr str(const T& value) {
+		std::ostringstream ret_value;
+		ret_value << value;
+		return ret_value.str().c_str();
+	}
+	pystr to_py(cPYSTR& ps) {
+		return ps;
+	}
+#pragma warning(pop)
 }
 #endif
