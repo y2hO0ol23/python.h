@@ -287,6 +287,7 @@ namespace py {
 			idx++;
 		}
 		ValueError("value not in list");
+		return 0;
 	}
 	template <class T> pylist<T>& pylist<T>::insert(int idx, T value) {
 		this->set_idx(&idx);
