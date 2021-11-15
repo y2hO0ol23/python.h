@@ -1,11 +1,14 @@
 #pragma once
 #ifndef _PYTHONLIST_
 #define _PYTHONLIST_
+
 #include <iostream>
 #include <algorithm>
-#include "pystr.h"
 
 namespace py {
+#ifndef _PYTHONSTRING_
+	class pystr;
+#endif
 	template <class T> class pylist;
 	template <class T> class pylist_node;
 	template <class T> int len(pylist<T> value);
@@ -100,7 +103,7 @@ namespace py {
 		if (*idx < 0) *idx += this->size_;
 	}
 	template <class T> void pylist<T>::check_idx_out_of_range(const int idx)  const {
-		if (idx < 0 || this->size_ <= idx) throw py::to_py("IndexError: list index out of range");
+		if (idx < 0 || this->size_ <= idx) IndexError("list index out of range");
 	}
 
 	template <class T> pylist_node<T>* pylist<T>::make_new_node(const T& value) {
@@ -141,7 +144,7 @@ namespace py {
 		else								node_ptr->prev_->next_ = node_ptr->next_;
 		if (node_ptr->next_ == nullptr)	this->tail_ = node_ptr->prev_;
 		else								node_ptr->next_->prev_ = node_ptr->prev_;
-		
+
 		free(node_ptr);
 		this->size_--;
 		this->flag_ = true;
@@ -166,7 +169,7 @@ namespace py {
 
 		pylist_node<T>* node = this->head_;
 		int idx = 0;
-		while(node != nullptr) {
+		while (node != nullptr) {
 			this->data_[idx] = node->data_;
 			node = node->next_;
 			idx++;
@@ -283,7 +286,7 @@ namespace py {
 			node = node->next_;
 			idx++;
 		}
-		throw py::to_py("ValueError: value not in list");
+		ValueError("value not in list");
 	}
 	template <class T> pylist<T>& pylist<T>::insert(int idx, T value) {
 		this->set_idx(&idx);
@@ -344,7 +347,7 @@ namespace py {
 	template <class T> pylist<T>& pylist<T>::operator=(const pylist<T>& right) {
 		this->clear();
 		pylist_node<T>* node = right.head_;
-		while(node != nullptr) {
+		while (node != nullptr) {
 			this->append(node->data_);
 			node = node->next_;
 		}
@@ -358,7 +361,7 @@ namespace py {
 
 		this->size_ += temp.size_;
 		this->flag_ = true;
-		
+
 		temp.head_ = nullptr; temp.tail_ = nullptr;
 		temp.size_ = 0;
 		return *this;
@@ -389,7 +392,7 @@ namespace py {
 		if (!(Idx < end)) return ret_value;
 		while (1) {
 			ret_value.append(node->data_);
-			
+
 			Idx += distance;
 			if (!(Idx < end)) return ret_value;
 			if (_Lsize - Idx > distance) {
