@@ -336,7 +336,7 @@ namespace py {
 	}
 
 	bool pystr::in_(cPYSTR value) {
-		return (this->find(value) != -1);
+		return (value.find(*(this)) != -1);
 	}
 
 	pystr pystr::capitalize() const {
@@ -665,16 +665,16 @@ namespace py {
 			bool has_add = false;
 			for (std::map<pystr, pystr>::const_iterator iter = table.begin(); iter != table.end(); iter++) {
 				if ((*this)[idx] == iter->first) {
-					if (iter->second == '\0') {
+					has_add = true;
+					if (iter->second != '\0') {
 						ret_value += iter->second;
-						has_add = true;
 						break;
 					}
 				}
 			}
 			if (has_add == false) ret_value += (*this)[idx];
 		}
-		return ret_value.replace('\0',"");
+		return ret_value;
 	}
 	pystr pystr::upper() const {
 		pystr ret_value;
@@ -839,13 +839,79 @@ namespace py {
 		return (wchar_t)unicode;
 	}
 	template<class T>
-	pystr str(const T& value) {
+	pystr str(const T& printable) {
 		std::ostringstream ret_value;
-		ret_value << value;
+		ret_value << printable;
 		return ret_value.str().c_str();
 	}
 	pystr to_py(cPYSTR& ps) {
 		return ps;
+	}
+	int int2n(const pystr& number, int volume = 0) {
+		pystr table = "0123456789abcdefghijklnmopqrstuvwxyz"p;
+		if (volume != 0 && (volume < 2  || volume > 36)) ValueError("int() base must be >= 2 and <= 36, or 0");
+		table = table("", volume);
+		if (volume == 0) table = table("", 10);
+
+		int start_idx = 0;
+		if (number[0] == '0') {
+			if (volume == 2 && number("", 2) == "0b") start_idx = 2;
+			if (volume == 8 && number("", 2) == "0o") start_idx = 2;
+			if (volume == 16 && number("", 2) == "0x") start_idx = 2;
+		}
+		
+		int ret_value = 0;
+		for (pystr element : number(start_idx,"")) {
+			pystr temp = element.lower();
+			if (element.upper() == temp.upper()) {
+				if (temp.in_(table)) {
+					ret_value *= volume ? volume : 10;
+					ret_value += table.find(temp);
+					continue;
+				}
+			}
+			ValueError(("invalid literal for int() with base "p + str(volume) + " : '"p + element + "'"p).c_str());
+		}
+		return ret_value;
+	}
+	pystr bin(int number) {
+		pystr ret_value;
+		pystr table = "01"p;
+
+		bool is_negative = number < 0;
+		if (is_negative) number *= -1;
+
+		while (number > 0) {
+			ret_value = table[number % 2] + ret_value;
+			number /= 2;
+		}
+		return (is_negative ? "-"p : ""p) + "0b"p + ret_value;
+	}
+	pystr oct(int number) {
+		pystr ret_value;
+		pystr table = "01234567"p;
+
+		bool is_negative = number < 0;
+		if (is_negative) number *= -1;
+
+		while (number > 0) {
+			ret_value = table[number % 8] + ret_value;
+			number /= 8;
+		}
+		return (is_negative ? "-"p : ""p) + "0o"p + ret_value;
+	}
+	pystr hex(int number) {
+		pystr ret_value;
+		pystr table = "0123456789abcdef"p;
+
+		bool is_negative = number < 0;
+		if (is_negative) number *= -1;
+
+		while (number > 0) {
+			ret_value = table[number % 16] + ret_value;
+			number /= 16;
+		}
+		return (is_negative ? "-"p : ""p) + "0x"p + ret_value;
 	}
 #pragma warning(pop)
 }
