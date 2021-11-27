@@ -159,6 +159,7 @@ namespace py {
 		pystr& operator=(cWCHAR* right);
 		pystr& operator=(cWCHAR right);
 		pystr& operator+=(cPYSTR& right);
+		pystr& operator*=(cINT& right);
 	};
 	void pystr::SetupVolume(cINT size) {
 		if (this->volume_ == 0) {
@@ -549,22 +550,21 @@ namespace py {
 	}
 	int pystr::rfind(cPYSTR& value, cINT start, cINT end) const {
 		//kmp algorithm
-		int value_len = value.length_, j = 0;
-		pylist<int> kmp_pi(value_len, 0); //get pi array
+		int value_len = value.length_, j = value_len - 1;
+		pylist<int> kmp_pi(value_len, value_len - 1); //get pi array
 		for (int i = value_len - 1; i >= 0; i--) {
-			while (j > 0 && value[i] != value[j]) j = *kmp_pi[j - 1];
-			if (value[i] == value[j] && i != j) *kmp_pi[i] = ++j;
+			while (j < value_len - 1 && value[i] != value[j]) j = *kmp_pi[j + 1];
+			if (value[i] == value[j] && i != j) *kmp_pi[i] = --j;
 		}
-
 		//find string
 		pystr target = (*this)(start, end);
 		int target_len = target.length_;
-		j = 0;
+		j = value_len - 1;
 		for (int i = target_len - 1; i >= 0; i--) {
-			while (j > 0 && target[i] != value[j])  j = *kmp_pi[j - 1];
+			while (j < value_len - 1 && target[i] != value[j])  j = *kmp_pi[j + 1];
 			if (target[i] == value[j]) {
-				if (j == value_len - 1) return i + start;
-				j++;
+				if (j == 0) return i + start;
+				j--;
 			}
 		}
 		return -1;
@@ -693,28 +693,31 @@ namespace py {
 		this->SetIdx(&idx);
 		this->isIdxOutOfRange(idx);
 		return this->data_[idx];
-	};
+	}
 	pystr pystr::operator()(cINT start, cINT end, cINT step) const {
 		int idx = start;
 		int _end = end;
 		this->SetResizedIdx(&idx);
-		this->SetResizedIdx(&_end);
+		if (_end < 0) _end = -1;
 
 		pystr ret_value;
-		while (idx < _end) {
+		while ((_end - idx) * step > 0) {
 			ret_value += this->data_[idx];
 			idx += step;
 		}
 		return ret_value;
-	};
+	}
 	pystr pystr::operator()(cCHAR* start, cINT end, cINT step) const {
-		return (*this)(0, end, step);
+		if (step > 0) return (*this)(0, end, step);
+		return (*this)(this->length_ - 1, end, step);
 	}
 	pystr pystr::operator()(cINT start, cCHAR* end, cINT step) const {
-		return (*this)(start, this->length_, step);
+		if (step > 0) return (*this)(start, this->length_, step);
+		return (*this)(start, -1, step);
 	}
 	pystr pystr::operator()(cCHAR* start, cCHAR* end, cINT step) const {
-		return (*this)(0, this->length_, step);
+		if (step > 0) return (*this)(0, this->length_, step);
+		return (*this)(this->length_ - 1, -1, step);
 	}
 
 #pragma warning(push)
@@ -757,6 +760,9 @@ namespace py {
 		this->data_[null_idx] = '\0';
 		this->length_ = null_idx;
 		return *this;
+	}
+	pystr& pystr::operator*=(cINT& right) {
+		return *this = *this * right;
 	}
 #pragma warning(pop)
 
