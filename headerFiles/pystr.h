@@ -8,6 +8,7 @@
 #include <stdarg.h> 
 
 #include <map>
+#include "pyerr.h"
 #include "pylist.h"
 
 namespace py {
