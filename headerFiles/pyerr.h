@@ -1,4 +1,6 @@
 #pragma once
+#ifndef _PYTHONERR_
+#define _PYTHONERR_
 #include <Windows.h>
 #include <iostream>
 
@@ -16,3 +18,4 @@ namespace py {
 		exit(-1);
 	}
 }
+#endif
