@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <algorithm>
+#include "pyerr.h"
 
 namespace py {
 #ifndef _PYTHONSTRING_
