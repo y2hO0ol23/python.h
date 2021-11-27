@@ -67,7 +67,7 @@ namespace py {
 	pylist<int> range(const int start, const int stop, const int step = 1) {
 		if (step == 0) ValueError("range() arg 3 must not be zero");
 		pylist<int> ret_value;
-		if ((start - stop) * step < 0) return ret_value;
+		if ((stop - start) * step < 0) return ret_value;
 
 		int s = 1;
 		int value = start;
